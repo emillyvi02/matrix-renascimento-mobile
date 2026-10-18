@@ -31,32 +31,25 @@
             font-family: 'VT323', monospace;
         }
 
-        /* Container do Jogo ajustado para ocupar a tela inteira do celular */
+        /* Container fluido otimizado para celulares */
         #gameContainer {
             position: relative;
             width: 100vw;
             height: 100vh;
-            max-width: 900px;
+            max-width: 100vw;
             max-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             background: #000;
             overflow: hidden;
-        }
-
-        @media (min-width: 640px) {
-            #gameContainer {
-                height: 96vh;
-                max-height: 720px;
-            }
         }
 
         canvas {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover; /* Aproxima a imagem cortando levemente as bordas laterais desnecessárias para focar nos personagens */
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             display: block;
@@ -150,30 +143,30 @@
 <body class="select-none crt" id="bodyRoot">
 
     <!-- Container do Jogo -->
-    <div id="gameContainer" class="matrix-border rounded-lg overflow-hidden p-1 sm:p-2">
+    <div id="gameContainer" class="matrix-border overflow-hidden p-1">
         
         <!-- Canvas Principal -->
         <canvas id="gameCanvas" class="rounded bg-black"></canvas>
 
         <!-- Botões Rápidos e Audio Controls (Topo Direita) -->
-        <div class="absolute top-2 right-2 flex items-center gap-1.5 z-30">
-            <button id="btnToggleLang" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+        <div class="absolute top-2 right-2 flex items-center gap-1 z-30">
+            <button id="btnToggleLang" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
                 🌐 PT
             </button>
-            <button id="btnToggleMusic" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+            <button id="btnToggleMusic" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
                 🔊 MÚSICA
             </button>
-            <button id="btnToggleCRT" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+            <button id="btnToggleCRT" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
                 📺 CRT
             </button>
-            <button id="btnPause" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-black transition hidden">
+            <button id="btnPause" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-black transition hidden">
                 ⏸ PAUSA
             </button>
         </div>
 
         <!-- INTRODUÇÃO CINEMATOGRÁFICA INTERATIVA -->
-        <div id="introTerminal" class="absolute inset-0 bg-black z-50 p-4 sm:p-6 font-mono text-xs sm:text-sm text-green-400 flex flex-col justify-between overflow-hidden">
-            <div id="terminalText" class="space-y-2 leading-relaxed overflow-y-auto max-h-[78%] pr-2"></div>
+        <div id="introTerminal" class="absolute inset-0 bg-black z-50 p-3 sm:p-6 font-mono text-xs sm:text-sm text-green-400 flex flex-col justify-between overflow-hidden">
+            <div id="terminalText" class="space-y-1.5 leading-relaxed overflow-y-auto max-h-[75%] pr-2"></div>
             
             <div class="flex flex-col sm:flex-row justify-between items-center border-t border-green-900 pt-2 gap-2 text-[11px] text-green-600">
                 <span id="introInstruction" class="text-yellow-400 animate-pulse font-bold text-center">▶ TOQUE AQUI OU ENTER PARA AVANÇAR</span>
@@ -196,7 +189,7 @@
                     </div>
                 </div>
                 <!-- Barra HP -->
-                <div class="w-28 sm:w-44 h-2 bg-gray-950 border border-green-500 rounded overflow-hidden p-0.5">
+                <div class="w-24 sm:w-44 h-2 bg-gray-950 border border-green-500 rounded overflow-hidden p-0.5">
                     <div id="hpBar" class="h-full bg-green-500 transition-all duration-100" style="width: 100%;"></div>
                 </div>
                 <!-- Barra Energy/Bullet Time -->
@@ -204,7 +197,7 @@
                     <span id="hudAbilityLabel">BULLET TIME</span>
                     <span id="focusReadyText" class="text-[8px] text-green-400 font-bold">CURA [F]</span>
                 </div>
-                <div class="w-28 sm:w-44 h-1.5 bg-gray-950 border border-cyan-500 rounded overflow-hidden p-0.5">
+                <div class="w-24 sm:w-44 h-1.5 bg-gray-950 border border-cyan-500 rounded overflow-hidden p-0.5">
                     <div id="focusBar" class="h-full bg-cyan-400 transition-all duration-75" style="width: 100%;"></div>
                 </div>
             </div>
@@ -219,22 +212,22 @@
         </div>
 
         <!-- MENU PRINCIPAL -->
-        <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-30 text-center">
-            <h1 class="text-3xl sm:text-6xl font-pixel text-green-400 tracking-widest mb-1 animate-pulse drop-shadow-[0_0_15px_rgba(0,255,65,0.9)]">
+        <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-3 z-30 text-center overflow-y-auto">
+            <h1 class="text-2xl sm:text-6xl font-pixel text-green-400 tracking-widest mb-1 animate-pulse drop-shadow-[0_0_15px_rgba(0,255,65,0.9)]">
                 MATRIX RENASCIMENTO
             </h1>
-            <p id="mainSubtitle" class="text-xs text-green-300 max-w-md mb-4 font-mono px-2">
+            <p id="mainSubtitle" class="text-xs text-green-300 max-w-md mb-3 font-mono px-2">
                 "Você toma a pílula azul... a história termina. Você toma a pílula vermelha... você permanece no País das Maravilhas."
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-3 mb-4">
-                <button id="btnBluePill" class="pill-blue px-5 py-2.5 rounded-full text-white font-bold flex items-center justify-center gap-2 text-xs border border-blue-300">
-                    <span class="w-3 h-3 rounded-full bg-blue-400 inline-block"></span>
+            <div class="flex flex-col sm:flex-row gap-2 mb-3">
+                <button id="btnBluePill" class="pill-blue px-4 py-2 rounded-full text-white font-bold flex items-center justify-center gap-2 text-xs border border-blue-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block"></span>
                     <span data-i18n="bluePillBtn">PÍLULA AZUL (MANUAL)</span>
                 </button>
 
-                <button id="btnRedPill" class="pill-red px-5 py-2.5 rounded-full text-white font-bold flex items-center justify-center gap-2 text-xs border border-red-300">
-                    <span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span>
+                <button id="btnRedPill" class="pill-red px-4 py-2 rounded-full text-white font-bold flex items-center justify-center gap-2 text-xs border border-red-300">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
                     <span data-i18n="redPillBtn">PÍLULA VERMELHA (ENTRAR)</span>
                 </button>
             </div>
@@ -243,13 +236,13 @@
         </div>
 
         <!-- SELEÇÃO DE PERSONAGEM E DIFICULDADE -->
-        <div id="charSelectMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-3 z-30 hidden overflow-y-auto">
-            <h2 class="text-lg sm:text-3xl font-pixel text-green-400 mb-2 drop-shadow-[0_0_10px_#00ff41] text-center" data-i18n="selectCharTitle">
+        <div id="charSelectMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-2 z-30 hidden overflow-y-auto">
+            <h2 class="text-base sm:text-3xl font-pixel text-green-400 mb-1 drop-shadow-[0_0_10px_#00ff41] text-center" data-i18n="selectCharTitle">
                 SELEÇÃO DE OPERADOR & NÍVEL DE AMEAÇA
             </h2>
 
             <!-- SELETOR DE DIFICULDADE -->
-            <div class="flex items-center gap-1.5 mb-3 bg-black/80 p-1 border border-green-500 rounded text-[11px] font-mono flex-wrap justify-center">
+            <div class="flex items-center gap-1 mb-2 bg-black/80 p-1 border border-green-500 rounded text-[10px] font-mono flex-wrap justify-center">
                 <span class="text-green-400 font-bold px-1" data-i18n="diffLabel">DIFICULDADE:</span>
                 <button id="diffEasy" onclick="setDifficulty('easy')" class="px-2 py-0.5 rounded matrix-btn" data-i18n="diffEasyBtn">FÁCIL</button>
                 <button id="diffMedium" onclick="setDifficulty('medium')" class="px-2 py-0.5 rounded matrix-btn diff-selected" data-i18n="diffMedBtn">MÉDIO</button>
@@ -257,45 +250,45 @@
             </div>
 
             <!-- CARDS DE PERSONAGENS -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mb-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-xl mb-2">
                 <!-- NEO -->
-                <div id="cardNeo" onclick="selectCharacter('neo')" class="matrix-btn p-2 rounded flex flex-col items-center cursor-pointer border-2 border-green-500">
-                    <div class="w-12 h-12 mb-1 bg-black border border-green-500 rounded p-0.5">
+                <div id="cardNeo" onclick="selectCharacter('neo')" class="matrix-btn p-1.5 rounded flex flex-col items-center cursor-pointer border-2 border-green-500">
+                    <div class="w-10 h-10 mb-1 bg-black border border-green-500 rounded p-0.5">
                         <canvas id="portraitNeoCanvas" width="32" height="32" class="w-full h-full"></canvas>
                     </div>
-                    <h3 class="font-pixel text-xl text-green-300">NEO</h3>
-                    <span class="text-[9px] text-cyan-300 mb-0.5 font-bold" data-i18n="neoRole">O ESCOLHIDO</span>
-                    <ul class="text-[10px] text-left w-full space-y-0.5 text-green-400 font-mono">
+                    <h3 class="font-pixel text-lg text-green-300 leading-none">NEO</h3>
+                    <span class="text-[8px] text-cyan-300 mb-0.5 font-bold" data-i18n="neoRole">O ESCOLHIDO</span>
+                    <ul class="text-[9px] text-left w-full space-y-0 text-green-400 font-mono">
                         <li>• <b class="text-white" data-i18n="neoSp1">Especial:</b> <span data-i18n="neoSp1Desc">Pulso Telecinético [K]</span></li>
                     </ul>
                 </div>
 
                 <!-- TRINITY -->
-                <div id="cardTrinity" onclick="selectCharacter('trinity')" class="matrix-btn p-2 rounded flex flex-col items-center cursor-pointer opacity-60 hover:opacity-100">
-                    <div class="w-12 h-12 mb-1 bg-black border border-green-500/50 rounded p-0.5">
+                <div id="cardTrinity" onclick="selectCharacter('trinity')" class="matrix-btn p-1.5 rounded flex flex-col items-center cursor-pointer opacity-60 hover:opacity-100">
+                    <div class="w-10 h-10 mb-1 bg-black border border-green-500/50 rounded p-0.5">
                         <canvas id="portraitTrinityCanvas" width="32" height="32" class="w-full h-full"></canvas>
                     </div>
-                    <h3 class="font-pixel text-xl text-green-300">TRINITY</h3>
-                    <span class="text-[9px] text-cyan-300 mb-0.5 font-bold" data-i18n="trinityRole">EFEITO MESTRE</span>
-                    <ul class="text-[10px] text-left w-full space-y-0.5 text-green-400 font-mono">
+                    <h3 class="font-pixel text-lg text-green-300 leading-none">TRINITY</h3>
+                    <span class="text-[8px] text-cyan-300 mb-0.5 font-bold" data-i18n="trinityRole">EFEITO MESTRE</span>
+                    <ul class="text-[9px] text-left w-full space-y-0 text-green-400 font-mono">
                         <li>• <b class="text-white" data-i18n="trinitySp1">Especial:</b> <span data-i18n="trinitySp1Desc">Chute Voador Triplo [K]</span></li>
                     </ul>
                 </div>
 
                 <!-- MORPHEUS -->
-                <div id="cardMorpheus" onclick="selectCharacter('morpheus')" class="matrix-btn p-2 rounded flex flex-col items-center cursor-pointer opacity-60 hover:opacity-100">
-                    <div class="w-12 h-12 mb-1 bg-black border border-green-500/50 rounded p-0.5">
+                <div id="cardMorpheus" onclick="selectCharacter('morpheus')" class="matrix-btn p-1.5 rounded flex flex-col items-center cursor-pointer opacity-60 hover:opacity-100">
+                    <div class="w-10 h-10 mb-1 bg-black border border-green-500/50 rounded p-0.5">
                         <canvas id="portraitMorpheusCanvas" width="32" height="32" class="w-full h-full"></canvas>
                     </div>
-                    <h3 class="font-pixel text-xl text-green-300">MORPHEUS</h3>
-                    <span class="text-[9px] text-cyan-300 mb-0.5 font-bold" data-i18n="morpheusRole">LÍDER REBELDE</span>
-                    <ul class="text-[10px] text-left w-full space-y-0.5 text-green-400 font-mono">
+                    <h3 class="font-pixel text-lg text-green-300 leading-none">MORPHEUS</h3>
+                    <span class="text-[8px] text-cyan-300 mb-0.5 font-bold" data-i18n="morpheusRole">LÍDER REBELDE</span>
+                    <ul class="text-[9px] text-left w-full space-y-0 text-green-400 font-mono">
                         <li>• <b class="text-white" data-i18n="morpheusSp1">Especial:</b> <span data-i18n="morpheusSp1Desc">Whirlwind Katana [K]</span></li>
                     </ul>
                 </div>
             </div>
 
-            <button id="btnStartGame" class="matrix-btn px-8 py-2 rounded-md font-pixel text-xl tracking-widest animate-pulse" data-i18n="startConnBtn">
+            <button id="btnStartGame" class="matrix-btn px-6 py-1.5 rounded-md font-pixel text-lg tracking-widest animate-pulse" data-i18n="startConnBtn">
                 INICIAR CONEXÃO
             </button>
         </div>
@@ -363,21 +356,21 @@
             </button>
         </div>
 
-        <!-- CONTROLES MOBILE OTIMIZADOS E POSICIONADOS DENTRO DA ÁREA VISÍVEL -->
-        <div id="mobileControls" class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none z-20">
+        <!-- CONTROLES MOBILE OTIMIZADOS E GARANTIDOS NA TELA -->
+        <div id="mobileControls" class="absolute bottom-1.5 left-1.5 right-1.5 flex justify-between items-end pointer-events-none z-20">
             <!-- Direcional Esquerda / Direita / Cura -->
-            <div class="flex gap-2 pointer-events-auto items-center">
-                <button id="btnLeft" class="w-11 h-11 bg-green-950/85 border-2 border-green-500 text-green-400 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-lg shadow-lg">◄</button>
-                <button id="btnRight" class="w-11 h-11 bg-green-950/85 border-2 border-green-500 text-green-400 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-lg shadow-lg">►</button>
-                <button id="btnMobileHeal" class="w-11 h-11 bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 rounded-full flex items-center justify-center active:bg-emerald-400 active:text-black font-bold text-[10px] shadow-lg">CURA</button>
+            <div class="flex gap-1.5 pointer-events-auto items-center">
+                <button id="btnLeft" class="w-10 h-10 sm:w-11 sm:h-11 bg-green-950/85 border-2 border-green-500 text-green-400 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-base shadow-lg">◄</button>
+                <button id="btnRight" class="w-10 h-10 sm:w-11 sm:h-11 bg-green-950/85 border-2 border-green-500 text-green-400 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-base shadow-lg">►</button>
+                <button id="btnMobileHeal" class="w-10 h-10 sm:w-11 sm:h-11 bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 rounded-full flex items-center justify-center active:bg-emerald-400 active:text-black font-bold text-[9px] shadow-lg">CURA</button>
             </div>
 
             <!-- Ações Direita: Pulo, Slow, Golpe, Especial -->
             <div class="grid grid-cols-4 gap-1 pointer-events-auto">
-                <button id="btnJump" class="w-10 h-10 bg-green-950/85 border-2 border-green-500 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[9px] shadow-lg" data-i18n="mobJump">PULO</button>
-                <button id="btnFocus" class="w-10 h-10 bg-cyan-950/85 border-2 border-cyan-500 text-cyan-300 rounded-full flex items-center justify-center active:bg-cyan-400 active:text-black font-bold text-[9px] shadow-lg">SLOW</button>
-                <button id="btnMelee" class="w-10 h-10 bg-green-950/85 border-2 border-green-500 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[9px] shadow-lg" data-i18n="mobMelee">GOLP</button>
-                <button id="btnSpecial" class="w-10 h-10 bg-red-950/85 border-2 border-red-500 text-red-300 rounded-full flex items-center justify-center active:bg-red-400 active:text-black font-bold text-[9px] shadow-lg" data-i18n="mobSpec">ESP</button>
+                <button id="btnJump" class="w-9 h-9 sm:w-10 sm:h-10 bg-green-950/85 border-2 border-green-500 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[8px] shadow-lg" data-i18n="mobJump">PULO</button>
+                <button id="btnFocus" class="w-9 h-9 sm:w-10 sm:h-10 bg-cyan-950/85 border-2 border-cyan-500 text-cyan-300 rounded-full flex items-center justify-center active:bg-cyan-400 active:text-black font-bold text-[8px] shadow-lg">SLOW</button>
+                <button id="btnMelee" class="w-9 h-9 sm:w-10 sm:h-10 bg-green-950/85 border-2 border-green-500 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[8px] shadow-lg" data-i18n="mobMelee">GOLP</button>
+                <button id="btnSpecial" class="w-9 h-9 sm:w-10 sm:h-10 bg-red-950/85 border-2 border-red-500 text-red-300 rounded-full flex items-center justify-center active:bg-red-400 active:text-black font-bold text-[8px] shadow-lg" data-i18n="mobSpec">ESP</button>
             </div>
         </div>
 
