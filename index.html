@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="pt-BR" id="htmlRoot">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Matrix Renascimento - Extended Director's Cut</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #020802;
+            color: #00ff41;
+            font-family: 'Share Tech Mono', monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .font-pixel {
+            font-family: 'VT323', monospace;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        /* Scanlines & CRT FX */
+        .crt::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 20;
+            background-size: 100% 4px, 4px 100%;
+            pointer-events: none;
+        }
+
+        .crt::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: rgba(0, 255, 65, 0.02);
+            opacity: 0.8;
+            z-index: 20;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        .no-crt::before, .no-crt::after {
+            display: none !important;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.2; }
+            50% { opacity: 0.35; }
+            100% { opacity: 0.2; }
+        }
+
+        .matrix-border {
+            border: 2px solid #00ff41;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.4), inset 0 0 10px rgba(0, 255, 65, 0.2);
+        }
+
+        .matrix-btn {
+            background: rgba(0, 25, 8, 0.88);
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            transition: all 0.2s ease;
+            text-shadow: 0 0 8px #00ff41;
+        }
+
+        .matrix-btn:hover, .matrix-btn:active {
+            background: #00ff41;
+            color: #000;
+            box-shadow: 0 0 20px #00ff41;
+            text-shadow: none;
+        }
+
+        .pill-red {
+            background: linear-gradient(135deg, #ff2222, #770000);
+            box-shadow: 0 0 15px rgba(255, 0, 0, 0.7);
+        }
+        .pill-red:hover {
+            box-shadow: 0 0 25px rgba(255, 50, 50, 0.9);
+            transform: scale(1.04);
+        }
+
+        .pill-blue {
+            background: linear-gradient(135deg, #2277ff, #001177);
+            box-shadow: 0 0 15px rgba(0, 100, 255, 0.7);
+        }
+        .pill-blue:hover {
+            box-shadow: 0 0 25px rgba(50, 150, 255, 0.9);
+            transform: scale(1.04);
+        }
+
+        .glass-panel {
+            background: rgba(2, 12, 4, 0.94);
+            backdrop-filter: blur(6px);
+        }
+
+        .diff-selected {
+            background-color: #00ff41 !important;
+            color: #000000 !important;
+            font-weight: bold;
+            box-shadow: 0 0 15px #00ff41;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center p-1 sm:p-4 select-none crt" id="bodyRoot">
+
+    <!-- Container do Jogo -->
+    <div class="relative w-full max-w-4xl h-[96vh] max-h-[720px] flex flex-col items-center justify-between matrix-border rounded-lg bg-black overflow-hidden p-1.5 sm:p-2">
+        
+        <!-- Canvas Principal -->
+        <canvas id="gameCanvas" class="w-full h-full block rounded bg-black"></canvas>
+
+        <!-- Botões Rápidos e Audio Controls (Topo Direita) -->
+        <div class="absolute top-2 right-2 flex items-center gap-1.5 z-30">
+            <button id="btnToggleLang" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+                🌐 PT
+            </button>
+            <button id="btnToggleMusic" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+                🔊 MÚSICA
+            </button>
+            <button id="btnToggleCRT" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+                📺 CRT
+            </button>
+            <button id="btnPause" class="px-2 py-0.5 text-[10px] sm:text-xs bg-black/80 border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-black transition hidden">
+                ⏸ PAUSA
+            </button>
+        </div>
+
+        <!-- INTRODUÇÃO CINEMATOGRÁFICA INTERATIVA -->
+        <div id="introTerminal" class="absolute inset-0 bg-black z-50 p-4 sm:p-6 font-mono text-xs sm:text-sm text-green-400 flex flex-col justify-between overflow-hidden">
+            <div id="terminalText" class="space-y-2 leading-relaxed overflow-y-auto max-h-[78%] pr-2"></div>
+            
+            <div class="flex flex-col sm:flex-row justify-between items-center border-t border-green-900 pt-2 gap-2 text-[11px] text-green-600">
+                <span id="introInstruction" class="text-yellow-400 animate-pulse font-bold text-center">▶ TOQUE AQUI OU ENTER PARA AVANÇAR</span>
+                <button id="btnSkipIntro" class="text-green-300 hover:text-green-100 border border-green-500 px-3 py-1 bg-green-950/80 rounded" data-i18n="skipIntro">AVANÇAR / PULAR</button>
+            </div>
+        </div>
+
+        <!-- HUD do Jogo -->
+        <div id="hud" class="absolute top-12 left-2 right-2 sm:top-14 sm:left-3 sm:right-3 flex justify-between items-start pointer-events-none hidden font-pixel z-10">
+            <!-- Stats do Jogador -->
+            <div class="flex flex-col gap-0.5 bg-black/85 p-1.5 rounded border border-green-500/60 shadow-[0_0_8px_rgba(0,255,65,0.2)]">
+                <div class="flex items-center gap-2">
+                    <canvas id="hudPortraitCanvas" width="24" height="24" class="w-6 h-6 rounded border border-green-500 bg-black"></canvas>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span id="hudCharName" class="text-green-400 font-bold text-base leading-none">NEO</span>
+                            <span id="hudDiffBadge" class="text-[9px] px-1 bg-green-950 border border-green-500 text-green-300 font-mono">MÉDIO</span>
+                        </div>
+                        <div id="hudHPText" class="text-[10px] text-green-300 font-mono">100/100</div>
+                    </div>
+                </div>
+                <!-- Barra HP -->
+                <div class="w-28 sm:w-44 h-2 bg-gray-950 border border-green-500 rounded overflow-hidden p-0.5">
+                    <div id="hpBar" class="h-full bg-green-500 transition-all duration-100" style="width: 100%;"></div>
+                </div>
+                <!-- Barra Energy/Bullet Time -->
+                <div class="flex items-center justify-between text-[9px] text-cyan-400 font-mono">
+                    <span id="hudAbilityLabel">BULLET TIME</span>
+                    <span id="focusReadyText" class="text-[8px] text-green-400 font-bold">CURA [F]</span>
+                </div>
+                <div class="w-28 sm:w-44 h-1.5 bg-gray-950 border border-cyan-500 rounded overflow-hidden p-0.5">
+                    <div id="focusBar" class="h-full bg-cyan-400 transition-all duration-75" style="width: 100%;"></div>
+                </div>
+            </div>
+
+            <!-- Stats da Fase & Pontuação -->
+            <div class="flex flex-col items-end bg-black/85 p-1.5 rounded border border-green-500/60 font-mono text-[10px] sm:text-xs shadow-[0_0_8px_rgba(0,255,65,0.2)]">
+                <div class="text-green-400 font-pixel text-base sm:text-xl"><span data-i18n="scoreLabel">PONTOS</span>: <span id="scoreText" class="text-white">0</span></div>
+                <div class="text-yellow-400 font-pixel text-sm sm:text-base"><span data-i18n="highScoreLabel">RECORDE</span>: <span id="highScoreText" class="text-yellow-200">0</span></div>
+                <div class="text-[10px] text-green-300"><span data-i18n="stageLabel">ESTÁGIO</span>: <span id="stageNameText" class="text-white font-bold">ROOFTOPS</span></div>
+                <div class="text-[10px] text-red-400"><span data-i18n="waveLabel">ONDA</span>: <span id="waveText" class="text-white font-bold">1</span>/<span id="maxWavesText">5</span> | <span data-i18n="enemiesLabel">INIM</span>: <span id="enemyCountText" class="text-white">0</span></div>
+            </div>
+        </div>
+
+        <!-- MENU PRINCIPAL -->
+        <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-30 text-center">
+            <h1 class="text-4xl sm:text-6xl font-pixel text-green-400 tracking-widest mb-1 animate-pulse drop-shadow-[0_0_15px_rgba(0,255,65,0.9)]">
+                MATRIX RENASCIMENTO
+            </h1>
+            <p id="mainSubtitle" class="text-xs text-green-300 max-w-md mb-4 font-mono px-2">
+                "Você toma a pílula azul... a história termina. Você toma a pílula vermelha... você permanece no País das Maravilhas."
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                <button id="btnBluePill" class="pill-blue px-5 py-2.5 rounded-full text-white font-bold flex items-center justify-center gap-2 text-xs border border-blue-300">
+                    <span class="w-3 h-3 rounded-full bg-blue-400 inline-block"></span>
+                    <span data-i18n="bluePillBtn">PÍLULA AZUL (MANUAL)</span>
+                </button>
+
+                <button id="btnRedPill" class="pill-red px-5 py-2.5 rounded-full text-white font-bold flex items-center justify-center gap-2 text-xs border border-red-300">
+                    <span class="w-3 h-3 rounded-full bg-red-400 inline-block"></span>
+                    <span data-i18n="redPillBtn">PÍLULA VERMELHA (ENTRAR)</span>
+                </button>
+            </div>
+
+            <div class="text-[10px] text-green-600 font-mono tracking-widest" data-i18n="cyberpunkSubtitle">CYBERPUNK ACTION • DEFTONES OST • HD SPRITES</div>
+        </div>
+
+        <!-- SELEÇÃO DE PERSONAGEM E DIFICULDADE -->
+        <div id="charSelectMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-3 z-30 hidden overflow-y-auto">
+            <h2 class="text-xl sm:text-3xl font-pixel text-green-400 mb-2 drop-shadow-[0_0_10px_#00ff41] text-center" data-i18n="selectCharTitle">
+                SELEÇÃO DE OPERADOR & NÍVEL DE AMEAÇA
+            </h2>
+
+            <!-- SELETOR DE DIFICULDADE -->
+            <div class="flex items-center gap-1.5 mb-3 bg-black/80 p-1 border border-green-500 rounded text-[11px] font-mono flex-wrap justify-center">
+                <span class="text-green-400 font-bold px-1" data-i18n="diffLabel">DIFICULDADE:</span>
+                <button id="diffEasy" onclick="setDifficulty('easy')" class="px-2 py-0.5 rounded matrix-btn" data-i18n="diffEasyBtn">FÁCIL</button>
+                <button id="diffMedium" onclick="setDifficulty('medium')" class="px-2 py-0.5 rounded matrix-btn diff-selected" data-i18n="diffMedBtn">MÉDIO</button>
+                <button id="diffHard" onclick="setDifficulty('hard')" class="px-2 py-0.5 rounded matrix-btn" data-i18n="diffHardBtn">DIFÍCIL</button>
+            </div>
+
+            <!-- CARDS DE PERSONAGENS -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full max-w-2xl mb-3">
+                <!-- NEO -->
+                <div id="cardNeo" onclick="selectCharacter('neo')" class="matrix-btn p-2 rounded flex flex-col items-center cursor-pointer border-2 border-green-500">
+                    <div class="w-12 h-12 mb-1 bg-black border border-green-500 rounded p-0.5">
+                        <canvas id="portraitNeoCanvas" width="32" height="32" class="w-full h-full"></canvas>
+                    </div>
+                    <h3 class="font-pixel text-xl text-green-300">NEO</h3>
+                    <span class="text-[9px] text-cyan-300 mb-0.5 font-bold" data-i18n="neoRole">O ESCOLHIDO</span>
+                    <ul class="text-[10px] text-left w-full space-y-0.5 text-green-400 font-mono">
+                        <li>• <b class="text-white" data-i18n="neoSp1">Especial:</b> <span data-i18n="neoSp1Desc">Pulso Telecinético [K]</span></li>
+                    </ul>
+                </div>
+
+                <!-- TRINITY -->
+                <div id="cardTrinity" onclick="selectCharacter('trinity')" class="matrix-btn p-2 rounded flex flex-col items-center cursor-pointer opacity-60 hover:opacity-100">
+                    <div class="w-12 h-12 mb-1 bg-black border border-green-500/50 rounded p-0.5">
+                        <canvas id="portraitTrinityCanvas" width="32" height="32" class="w-full h-full"></canvas>
+                    </div>
+                    <h3 class="font-pixel text-xl text-green-300">TRINITY</h3>
+                    <span class="text-[9px] text-cyan-300 mb-0.5 font-bold" data-i18n="trinityRole">EFEITO MESTRE</span>
+                    <ul class="text-[10px] text-left w-full space-y-0.5 text-green-400 font-mono">
+                        <li>• <b class="text-white" data-i18n="trinitySp1">Especial:</b> <span data-i18n="trinitySp1Desc">Chute Voador Triplo [K]</span></li>
+                    </ul>
+                </div>
+
+                <!-- MORPHEUS -->
+                <div id="cardMorpheus" onclick="selectCharacter('morpheus')" class="matrix-btn p-2 rounded flex flex-col items-center cursor-pointer opacity-60 hover:opacity-100">
+                    <div class="w-12 h-12 mb-1 bg-black border border-green-500/50 rounded p-0.5">
+                        <canvas id="portraitMorpheusCanvas" width="32" height="32" class="w-full h-full"></canvas>
+                    </div>
+                    <h3 class="font-pixel text-xl text-green-300">MORPHEUS</h3>
+                    <span class="text-[9px] text-cyan-300 mb-0.5 font-bold" data-i18n="morpheusRole">LÍDER REBELDE</span>
+                    <ul class="text-[10px] text-left w-full space-y-0.5 text-green-400 font-mono">
+                        <li>• <b class="text-white" data-i18n="morpheusSp1">Especial:</b> <span data-i18n="morpheusSp1Desc">Whirlwind Katana [K]</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <button id="btnStartGame" class="matrix-btn px-8 py-2 rounded-md font-pixel text-xl tracking-widest animate-pulse" data-i18n="startConnBtn">
+                INICIAR CONEXÃO
+            </button>
+        </div>
+
+        <!-- MODAL DE INSTRUÇÕES -->
+        <div id="instructionsModal" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-50 hidden text-left max-w-sm mx-auto rounded border border-green-500 overflow-y-auto">
+            <h3 class="text-2xl font-pixel text-green-400 mb-2 border-b border-green-500 pb-1 w-full text-center" data-i18n="manualTitle">MANUAL DO OPERADOR</h3>
+            <div class="text-[11px] font-mono space-y-1.5 text-green-300 mb-4 w-full">
+                <p><span class="text-black bg-green-400 font-bold px-1 rounded">TOQUE / BOTÕES TELA</span>: <span data-i18n="ctrlMobDesc">Use os botões virtuais no celular</span></p>
+                <p><span class="text-black bg-green-400 font-bold px-1 rounded">F / CURA</span>: Regenerar +30% de Vida (<span data-i18n="healLimitNote">Limitado por Onda</span>)</p>
+                <p><span class="text-black bg-green-400 font-bold px-1 rounded">P / ESC</span>: <span data-i18n="ctrlPauseDesc">Pausar / Configurações</span></p>
+                <div class="bg-green-950/80 p-1.5 border border-green-500/50 rounded mt-1 text-[10px] text-green-200">
+                    <b data-i18n="consumablesTitle">CONSUMÍVEIS:</b> <span data-i18n="consumablesDesc">Pegue a <b>Pílula Vermelha</b> (+HP), <b>Pílula Azul</b> (+Stamina) e o <b>Disquete</b> (+500 Pts)!</span>
+                </div>
+            </div>
+            <button id="btnCloseInstructions" class="matrix-btn px-6 py-1.5 rounded text-xs font-bold" data-i18n="backBtn">
+                VOLTAR
+            </button>
+        </div>
+
+        <!-- MENU DE PAUSA -->
+        <div id="pauseMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-40 hidden text-center">
+            <h2 class="text-3xl font-pixel text-yellow-400 mb-3 tracking-widest drop-shadow-[0_0_10px_rgba(255,255,0,0.8)]" data-i18n="pausedTitle">SIMULAÇÃO PAUSADA</h2>
+            <div class="flex flex-col gap-2 w-48 font-mono text-xs">
+                <button id="btnResume" class="matrix-btn py-1.5 rounded" data-i18n="resumeBtn">CONTINUAR [P]</button>
+                <button id="btnPauseHowToPlay" class="matrix-btn py-1.5 rounded" data-i18n="manualBtn">COMO JOGAR (MANUAL)</button>
+                <button id="btnPauseMusicToggle" class="matrix-btn py-1.5 rounded">MÚSICA: LIGADA</button>
+                <button id="btnQuit" class="matrix-btn py-1.5 rounded border-red-500 text-red-400 hover:bg-red-500 hover:text-black" data-i18n="quitBtn">ABANDONAR</button>
+            </div>
+        </div>
+
+        <!-- GAME OVER -->
+        <div id="gameOverMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-30 hidden text-center">
+            <h2 class="text-4xl sm:text-5xl font-pixel text-red-500 mb-1 drop-shadow-[0_0_15px_rgba(255,0,0,0.9)]" data-i18n="gameOverTitle">
+                SISTEMA REBOOT
+            </h2>
+            <p class="text-xs text-red-300 font-mono mb-3" data-i18n="gameOverSub">Sua mente foi desligada da Matrix.</p>
+
+            <div class="bg-black/90 border border-red-500/60 p-3 rounded mb-4 w-56 text-left font-pixel text-lg space-y-0.5 text-red-400">
+                <div class="flex justify-between"><span data-i18n="finalScoreLabel">PONTUAÇÃO:</span> <span id="finalScore" class="text-white">0</span></div>
+                <div class="flex justify-between"><span data-i18n="finalHighLabel">RECORDE:</span> <span id="finalHighScore" class="text-yellow-300">0</span></div>
+                <div class="flex justify-between"><span data-i18n="finalWaveLabel">ONDA:</span> <span id="finalWave" class="text-white">0</span></div>
+            </div>
+
+            <button id="btnRestart" class="matrix-btn px-6 py-2 rounded text-xl font-pixel" data-i18n="reconnectBtn">
+                RECONECTAR
+            </button>
+        </div>
+
+        <!-- MENU DE VITÓRIA -->
+        <div id="victoryMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-30 hidden text-center">
+            <h2 class="text-4xl sm:text-5xl font-pixel text-green-400 mb-1 drop-shadow-[0_0_20px_rgba(0,255,65,1)] animate-bounce" data-i18n="victoryTitle">
+                SIMULAÇÃO LIBERADA!
+            </h2>
+            <p class="text-xs text-green-300 font-mono mb-3" data-i18n="victorySub">"Você finalmente começou a acreditar. A Matrix é sua."</p>
+
+            <div class="bg-black/90 border border-green-500/80 p-3 rounded mb-4 w-64 text-left font-pixel text-lg space-y-0.5 text-green-400 shadow-[0_0_15px_rgba(0,255,65,0.3)]">
+                <div class="flex justify-between"><span data-i18n="perfLabel">DESEMPENHO:</span> <span class="text-yellow-300" data-i18n="masterText">MESTRE</span></div>
+                <div class="flex justify-between"><span data-i18n="scoreLabel">PONTUAÇÃO:</span> <span id="victoryScore" class="text-white">0</span></div>
+                <div class="flex justify-between"><span data-i18n="highScoreLabel">RECORDE:</span> <span id="victoryHighScore" class="text-yellow-300">0</span></div>
+            </div>
+
+            <button id="btnVictoryRestart" class="matrix-btn px-6 py-2 rounded text-xl font-pixel" data-i18n="playAgainBtn">
+                JOGAR NOVAMENTE
+            </button>
+        </div>
+
+        <!-- CONTROLES MOBILE OTIMIZADOS, MAIORES E MAIS ACIMA -->
+        <div id="mobileControls" class="absolute bottom-3 left-2 right-2 flex justify-between items-end pointer-events-none z-20">
+            <!-- Direcional Esquerda / Direita / Cura (Maiores e espaçados) -->
+            <div class="flex gap-2.5 pointer-events-auto items-center">
+                <button id="btnLeft" class="w-12 h-12 bg-green-950/85 border-2 border-green-500 text-green-400 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-xl shadow-lg">◄</button>
+                <button id="btnRight" class="w-12 h-12 bg-green-950/85 border-2 border-green-500 text-green-400 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-xl shadow-lg">►</button>
+                <button id="btnMobileHeal" class="w-12 h-12 bg-emerald-950/90 border-2 border-emerald-400 text-emerald-300 rounded-full flex items-center justify-center active:bg-emerald-400 active:text-black font-bold text-xs shadow-lg">CURA</button>
+            </div>
+
+            <!-- Ações Direita: Pulo, Slow, Golpe, Especial (Maiores) -->
+            <div class="grid grid-cols-4 gap-1.5 pointer-events-auto">
+                <button id="btnJump" class="w-11 h-11 bg-green-950/85 border-2 border-green-500 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[10px] shadow-lg" data-i18n="mobJump">PULO</button>
+                <button id="btnFocus" class="w-11 h-11 bg-cyan-950/85 border-2 border-cyan-500 text-cyan-300 rounded-full flex items-center justify-center active:bg-cyan-400 active:text-black font-bold text-[10px] shadow-lg">SLOW</button>
+                <button id="btnMelee" class="w-11 h-11 bg-green-950/85 border-2 border-green-500 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[10px] shadow-lg" data-i18n="mobMelee">GOLP</button>
+                <button id="btnSpecial" class="w-11 h-11 bg-red-950/85 border-2 border-red-500 text-red-300 rounded-full flex items-center justify-center active:bg-red-400 active:text-black font-bold text-[10px] shadow-lg" data-i18n="mobSpec">ESP</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT DO JOGO COMPLETO -->
+    <script>
+        // --- IDIOMAS / LOCALIZAÇÃO (PT-BR & EN-US) ---
+        let currentLang = 'pt';
+        const translations = {
+            pt: {
+                skipIntro: "AVANÇAR / PULAR",
+                scoreLabel: "PONTOS",
+                highScoreLabel: "RECORDE",
+                stageLabel: "ESTÁGIO",
+                waveLabel: "ONDA",
+                enemiesLabel: "INIM",
+                mainSubtitle: "\"Você toma a pílula azul... a história termina. Você toma a pílula vermelha... você permanece no País das Maravilhas.\"",
+                bluePillBtn: "PÍLULA AZUL (MANUAL)",
+                redPillBtn: "PÍLULA VERMELHA (ENTRAR)",
+                cyberpunkSubtitle: "CYBERPUNK ACTION • DEFTONES OST • HD SPRITES",
+                selectCharTitle: "SELEÇÃO DE OPERADOR & NÍVEL DE AMEAÇA",
+                diffLabel: "DIFICULDADE:",
+                diffEasyBtn: "FÁCIL",
+                diffMedBtn: "MÉDIO",
+                diffHardBtn: "DIFÍCIL",
+                neoRole: "O ESCOLHIDO",
+                neoSp1: "Especial:", neoSp1Desc: "Pulso Telecinético [K]",
+                trinityRole: "EFEITO MESTRE",
+                trinitySp1: "Especial:", trinitySp1Desc: "Chute Voador Triplo [K]",
+                morpheusRole: "LÍDER REBELDE",
+                morpheusSp1: "Especial:", morpheusSp1Desc: "Whirlwind Katana [K]",
+                startConnBtn: "INICIAR CONEXÃO",
+                manualTitle: "MANUAL DO OPERADOR",
+                ctrlMobDesc: "Use os botões na tela do celular",
+                healLimitNote: "Limitado por Onda",
+                ctrlPauseDesc: "Pausar / Configurações",
+                consumablesTitle: "CONSUMÍVEIS:",
+                consumablesDesc: "Pegue a <b>Pílula Vermelha</b> (+HP), <b>Pílula Azul</b> (+Stamina) e o <b>Disquete</b> (+500 Pts)!",
+                backBtn: "VOLTAR",
+                pausedTitle: "SIMULAÇÃO PAUSADA",
+                resumeBtn: "CONTINUAR [P]",
+                manualBtn: "COMO JOGAR (MANUAL)",
+                quitBtn: "ABANDONAR",
+                gameOverTitle: "SISTEMA REBOOT",
+                gameOverSub: "Sua mente foi desligada da Matrix.",
+                finalScoreLabel: "PONTUAÇÃO:",
+                finalHighLabel: "RECORDE:",
+                finalWaveLabel: "ONDA:",
+                reconnectBtn: "RECONECTAR",
+                victoryTitle: "SIMULAÇÃO LIBERADA!",
+                victorySub: "\"Você finalmente começou a acreditar. A Matrix é sua.\"",
+                perfLabel: "DESEMPENHO:",
+                masterText: "MESTRE",
+                playAgainBtn: "JOGAR NOVAMENTE",
+                mobJump: "PULO", mobMelee: "GOLP", mobSpec: "ESP",
+                introLines: [
+                    "ESTABELECENDO CONEXÃO COM A CONSCIÊNCIA...",
+                    "RASTREAMENTO DE SINAL: UNIVERSE-SIMULATION-0029",
+                    "--------------------------------------------------",
+                    "O QUE É O REAL? COMO VOCÊ DEFINE O REAL?",
+                    "SE VOCÊ FALA SOBRE O QUE SENTE, CHEIRA, PROVA E VÊ...",
+                    "SÃO APENAS SINAIS ELÉTRICOS INTERPRETADOS PELO SEU CÉREBRO.",
+                    "ESTA INTERFACE, ESTA TELA E SUA PRÓPRIA PERCEPÇÃO...",
+                    "SÃO CONSTRUÇÕES DE UMA PRISÃO PARA A SUA MENTE.",
+                    "VOCÊ JÁ TEVE UM SONHO TÃO REAL QUE PARECIA VERDADE?",
+                    "E SE VOCÊ NÃO CONSEGUISSE ACORDAR DESSE SONHO?",
+                    "OS AGENTES Smith REPRESENTAM O CONTROLE DO SISTEMA.",
+                    "A ESCOLHA NUNCA FOI SUA... MAS A LIBERTAÇÃO SIM.",
+                    "DESPERTE DA SIMULAÇÃO...",
+                    "--------------------------------------------------"
+                ]
+            },
+            en: {
+                skipIntro: "SKIP / ADVANCE",
+                scoreLabel: "SCORE",
+                highScoreLabel: "HIGH SCORE",
+                stageLabel: "STAGE",
+                waveLabel: "WAVE",
+                enemiesLabel: "ENEM",
+                mainSubtitle: "\"You take the blue pill... the story ends. You take the red pill... you stay in Wonderland.\"",
+                bluePillBtn: "BLUE PILL (MANUAL)",
+                redPillBtn: "RED PILL (ENTER)",
+                cyberpunkSubtitle: "CYBERPUNK ACTION • DEFTONES OST • HD SPRITES",
+                selectCharTitle: "OPERATOR SELECTION & THREAT LEVEL",
+                diffLabel: "DIFFICULTY:",
+                diffEasyBtn: "EASY",
+                diffMedBtn: "MEDIUM",
+                diffHardBtn: "HARD",
+                neoRole: "THE ONE",
+                neoSp1: "Special:", neoSp1Desc: "Telekinetic Pulse [K]",
+                trinityRole: "MASTER EFFECT",
+                trinitySp1: "Special:", trinitySp1Desc: "Triple Flying Kick [K]",
+                morpheusRole: "REBEL LEADER",
+                morpheusSp1: "Special:", morpheusSp1Desc: "Whirlwind Katana [K]",
+                startConnBtn: "INITIATE CONNECTION",
+                manualTitle: "OPERATOR MANUAL",
+                ctrlMobDesc: "Use touchscreen buttons on mobile",
+                healLimitNote: "Wave Limited",
+                ctrlPauseDesc: "Pause / Settings",
+                consumablesTitle: "CONSUMABLES:",
+                consumablesDesc: "Grab <b>Red Pill</b> (+HP), <b>Blue Pill</b> (+Stamina) & <b>Disk</b> (+500 Pts)!",
+                backBtn: "BACK",
+                pausedTitle: "SIMULATION PAUSED",
+                resumeBtn: "RESUME [P]",
+                manualBtn: "HOW TO PLAY (MANUAL)",
+                quitBtn: "QUIT",
+                gameOverTitle: "SYSTEM REBOOT",
+                gameOverSub: "Your mind was disconnected from the Matrix.",
+                finalScoreLabel: "SCORE:",
+                finalHighLabel: "HIGH SCORE:",
+                finalWaveLabel: "WAVE:",
+                reconnectBtn: "RECONNECT",
+                victoryTitle: "SIMULATION FREED!",
+                victorySub: "\"You finally started to believe. The Matrix is yours.\"",
+                perfLabel: "PERFORMANCE:",
+                masterText: "MASTER",
+                playAgainBtn: "PLAY AGAIN",
+                mobJump: "JUMP", mobMelee: "MEL", mobSpec: "SPC",
+                introLines: [
+                    "ESTABLISHING CONNECTION WITH CONSCIOUSNESS...",
+                    "SIGNAL TRACKING: UNIVERSE-SIMULATION-0029",
+                    "--------------------------------------------------",
+                    "WHAT IS REAL? HOW DO YOU DEFINE REAL?",
+                    "IF YOU'RE TALKING ABOUT WHAT YOU CAN FEEL, SMELL, TASTE AND SEE...",
+                    "THEN REAL IS SIMPLY ELECTRICAL SIGNALS INTERPRETED BY YOUR BRAIN.",
+                    "THIS INTERFACE, THIS SCREEN, AND YOUR OWN PERCEPTION...",
+                    "ARE CONSTRUCTIONS OF A PRISON FOR YOUR MIND.",
+                    "HAVE YOU EVER HAD A DREAM YOU WERE SO SURE WAS REAL?",
+                    "WHAT IF YOU COULDN'T WAKE UP FROM THAT DREAM?",
+                    "THE AGENTS Represent SYSTEM CONTROL.",
+                    "THE CHOICE WAS NEVER YOURS... BUT LIBERATION IS.",
+                    "WAKE UP FROM THE SIMULATION...",
+                    "--------------------------------------------------"
+                ]
+            }
+        };
+
+        function updateTexts() {
+            const t = translations[currentLang];
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) el.innerHTML = t[key];
+            });
+            document.getElementById('mainSubtitle').innerText = t.mainSubtitle;
+            document.getElementById('btnToggleLang').innerText = currentLang === 'pt' ? '🌐 PT' : '🌐 EN';
+        }
+
+        window.toggleLanguage = function() {
+            currentLang = currentLang === 'pt' ? 'en' : 'pt';
+            document.getElementById('htmlRoot').setAttribute('lang', currentLang === 'pt' ? 'pt-BR' : 'en-US');
+            updateTexts();
+            audio.playClick();
+        };
+
+        document.getElementById('btnToggleLang').addEventListener('click', toggleLanguage);
+
+
+        // --- 1. AUDIO ENGINE SINTETIZADO ---
+        class MatrixAudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.musicEnabled = true;
+                this.isMusicPlaying = false;
+                this.tempo = 142;
+                this.noteStep = 0;
+                this.timerId = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            startMusic() {
+                this.init();
+                if (this.isMusicPlaying || !this.musicEnabled) return;
+                this.isMusicPlaying = true;
+                this.noteStep = 0;
+
+                const stepDuration = (60 / this.tempo) / 4;
+                this.timerId = setInterval(() => {
+                    if (!this.musicEnabled || !this.isMusicPlaying) return;
+                    this.playDeftonesRiffStep(this.noteStep);
+                    this.noteStep = (this.noteStep + 1) % 16;
+                }, stepDuration * 1000);
+            }
+
+            stopMusic() {
+                this.isMusicPlaying = false;
+                if (this.timerId) clearInterval(this.timerId);
+            }
+
+            playDeftonesRiffStep(step) {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+
+                const deftonesNotes = [65.41, 65.41, 77.78, 73.42, 69.30, 65.41, 77.78, 73.42, 65.41, 65.41, 77.78, 73.42, 69.30, 65.41, 61.74, 58.27];
+                const freq = deftonesNotes[step];
+
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(bulletTimeActive ? freq * 0.5 : freq, now);
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(bulletTimeActive ? 300 : 1200, now);
+
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.14);
+
+                if (step === 0 || step === 6 || step === 8 || step === 14) {
+                    const kickOsc = this.ctx.createOscillator();
+                    const kickGain = this.ctx.createGain();
+                    kickOsc.frequency.setValueAtTime(bulletTimeActive ? 60 : 110, now);
+                    kickOsc.frequency.exponentialRampToValueAtTime(25, now + 0.1);
+                    kickGain.gain.setValueAtTime(0.25, now);
+                    kickGain.gain.linearRampToValueAtTime(0.001, now + 0.1);
+                    kickOsc.connect(kickGain);
+                    kickGain.connect(this.ctx.destination);
+                    kickOsc.start(now);
+                    kickOsc.stop(now + 0.1);
+                }
+
+                if (step === 4 || step === 12) {
+                    const snareGain = this.ctx.createGain();
+                    const bufferSize = this.ctx.sampleRate * 0.08;
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buffer;
+                    snareGain.gain.setValueAtTime(0.12, now);
+                    snareGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+                    noise.connect(snareGain);
+                    snareGain.connect(this.ctx.destination);
+                    noise.start(now);
+                }
+            }
+
+            playTerminalBeep() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(950, now);
+                osc.frequency.setValueAtTime(1200, now + 0.03);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+
+            playHealSound() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.25);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playShoot() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(bulletTimeActive ? 400 : 850, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.09);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            }
+
+            playHit() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.linearRampToValueAtTime(40, now + 0.07);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.07);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.07);
+            }
+
+            playPickup() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.06);
+                osc.frequency.setValueAtTime(783.99, now + 0.12);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+
+            playSloMo() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+
+            playSpecial() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(900, now + 0.25);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playClick() {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.04);
+            }
+        }
+
+        const audio = new MatrixAudioEngine();
+
+        // --- INTRODUÇÃO FILOSÓFICA INTERATIVA ---
+        let currentIntroIndex = 0;
+        const termElem = document.getElementById('terminalText');
+
+        function advanceIntroLine() {
+            audio.init();
+            audio.playTerminalBeep();
+
+            const introLines = translations[currentLang].introLines;
+
+            if (currentIntroIndex >= introLines.length) {
+                closeIntro();
+                return;
+            }
+
+            const lineText = introLines[currentIntroIndex];
+            const p = document.createElement('div');
+            p.className = (currentIntroIndex === 3 || currentIntroIndex === 7 || currentIntroIndex === 11) 
+                ? "text-yellow-400 font-bold border-l-2 border-yellow-400 pl-2 py-0.5" 
+                : "text-green-400";
+            
+            p.textContent = lineText;
+            termElem.appendChild(p);
+            termElem.scrollTop = termElem.scrollHeight;
+
+            currentIntroIndex++;
+
+            if (currentIntroIndex >= introLines.length) {
+                document.getElementById('introInstruction').innerText = currentLang === 'pt' ? "▶ SIMULAÇÃO PRONTA! TOQUE OU ENTER" : "▶ SIMULATION READY! TAP OR ENTER";
+            }
+        }
+
+        function closeIntro() {
+            document.getElementById('introTerminal').classList.add('hidden');
+        }
+
+        document.getElementById('btnSkipIntro').addEventListener('click', (e) => {
+            e.stopPropagation();
+            advanceIntroLine();
+        });
+        document.getElementById('introTerminal').addEventListener('click', () => {
+            advanceIntroLine();
+        });
+
+        // --- 2. SETUP CANVAS & REGRAS ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+
+        const GAME_WIDTH = 480;
+        const GAME_HEIGHT = 270;
+        canvas.width = GAME_WIDTH;
+        canvas.height = GAME_HEIGHT;
+
+        let gameState = 'MENU';
+        let selectedCharKey = 'neo';
+        let difficulty = 'medium';
+        let score = 0;
+        let wave = 1;
+        let maxWaves = 5;
+        let currentStageIndex = 0;
+        let bulletTimeActive = false;
+        let bulletTimeEnergy = 100;
+        let timeScale = 1.0;
+        let healUsesInWave = 0;
+
+        const STAGES = [
+            { name: 'MEGA-CITY ROOFTOPS', bgType: 'rooftops' },
+            { name: 'SUBWAY STATION', bgType: 'subway' },
+            { name: 'THE DOJO CONSTRUCT', bgType: 'dojo' },
+            { name: 'MATRIX CONSTRUCT GRID', bgType: 'construct' }
+        ];
+
+        const DIFFICULTY_SETTINGS = {
+            easy: { name: 'FÁCIL', enemyDmgMult: 0.3, dropRate: 0.6, enemySpeedMult: 0.65, scoreMult: 1.0, maxWaves: 5, maxHealPerWave: Infinity },
+            medium: { name: 'MÉDIO', enemyDmgMult: 1.0, dropRate: 0.25, enemySpeedMult: 1.0, scoreMult: 1.0, maxWaves: 5, maxHealPerWave: 20 },
+            hard: { name: 'DIFÍCIL', enemyDmgMult: 1.4, dropRate: 0.15, enemySpeedMult: 1.2, scoreMult: 2.0, maxWaves: 3, maxHealPerWave: 6 }
+        };
+
+        const CHARACTERS = {
+            neo: {
+                name: 'NEO',
+                hp: 100,
+                speed: 2.5,
+                jumpForce: 6.9,
+                focusDrain: 0.4,
+                meleeDamage: 32,
+                skinColor: '#f5d6ba',
+                hairColor: '#100c0a',
+                glassesColor: '#050505',
+                coatColor: '#0d0d0d',
+                accentColor: '#00ff41'
+            },
+            trinity: {
+                name: 'TRINITY',
+                hp: 85,
+                speed: 3.1,
+                jumpForce: 8.0,
+                focusDrain: 0.6,
+                meleeDamage: 36,
+                skinColor: '#fae3d0',
+                hairColor: '#0a0a0a',
+                glassesColor: '#050505',
+                coatColor: '#081420',
+                accentColor: '#00d0ff'
+            },
+            morpheus: {
+                name: 'MORPHEUS',
+                hp: 150,
+                speed: 2.1,
+                jumpForce: 6.1,
+                focusDrain: 0.7,
+                meleeDamage: 52,
+                skinColor: '#6a3b22',
+                hairColor: 'transparent',
+                glassesColor: '#1a1a1a',
+                coatColor: '#301338',
+                accentColor: '#b050ff'
+            }
+        };
+
+        const keys = { left: false, right: false, jump: false, melee: false, special: false, focus: false };
+
+        // --- 3. PIXEL PORTRAITS DETALHADOS ---
+        function drawPixelPortrait(canvasId, charKey) {
+            const cvs = document.getElementById(canvasId);
+            if (!cvs) return;
+            const pctx = cvs.getContext('2d');
+            pctx.imageSmoothingEnabled = false;
+            pctx.clearRect(0, 0, 32, 32);
+
+            const char = CHARACTERS[charKey];
+            pctx.fillStyle = '#030d05';
+            pctx.fillRect(0, 0, 32, 32);
+
+            pctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
+            pctx.strokeRect(1, 1, 30, 30);
+
+            if (charKey === 'neo') {
+                pctx.fillStyle = '#0d0d0d'; pctx.fillRect(6, 21, 20, 11);
+                pctx.fillStyle = '#1c1c1c'; pctx.fillRect(10, 19, 12, 5);
+                pctx.fillStyle = char.skinColor; pctx.fillRect(12, 16, 8, 4); pctx.fillRect(9, 6, 14, 11);
+                pctx.fillStyle = char.hairColor; pctx.fillRect(8, 3, 16, 5); pctx.fillRect(7, 5, 3, 8); pctx.fillRect(22, 5, 3, 8); pctx.fillRect(9, 7, 4, 3);
+                pctx.fillStyle = '#000000'; pctx.fillRect(10, 10, 5, 3); pctx.fillRect(17, 10, 5, 3); pctx.fillRect(15, 11, 2, 1);
+                pctx.fillStyle = '#00ff41'; pctx.fillRect(11, 10, 1, 1); pctx.fillRect(18, 10, 1, 1);
+            } else if (charKey === 'trinity') {
+                pctx.fillStyle = '#081420'; pctx.fillRect(6, 21, 20, 11);
+                pctx.fillStyle = '#152e48'; pctx.fillRect(12, 20, 8, 4);
+                pctx.fillStyle = char.skinColor; pctx.fillRect(12, 16, 8, 4); pctx.fillRect(10, 6, 12, 11);
+                pctx.fillStyle = char.hairColor; pctx.fillRect(9, 3, 14, 5); pctx.fillRect(8, 5, 3, 11); pctx.fillRect(21, 5, 3, 11);
+                pctx.fillStyle = '#00d0ff'; pctx.fillRect(11, 4, 4, 1);
+                pctx.fillStyle = '#000000'; pctx.fillRect(11, 10, 4, 3); pctx.fillRect(17, 10, 4, 3); pctx.fillRect(15, 11, 2, 1);
+                pctx.fillStyle = '#00d0ff'; pctx.fillRect(12, 10, 1, 1); pctx.fillRect(18, 10, 1, 1);
+            } else if (charKey === 'morpheus') {
+                pctx.fillStyle = '#301338'; pctx.fillRect(5, 21, 22, 11);
+                pctx.fillStyle = '#4a2055'; pctx.fillRect(10, 19, 12, 4);
+                pctx.fillStyle = char.skinColor; pctx.fillRect(11, 16, 10, 4); pctx.fillRect(9, 5, 14, 12); pctx.fillRect(10, 4, 12, 2);
+                pctx.fillStyle = '#8a5233'; pctx.fillRect(12, 4, 3, 1);
+                pctx.fillStyle = '#111111'; pctx.fillRect(10, 10, 5, 4); pctx.fillRect(17, 10, 5, 4);
+                pctx.fillStyle = '#d4af37'; pctx.fillRect(15, 11, 2, 1);
+                pctx.fillStyle = '#ffffff'; pctx.fillRect(11, 10, 2, 1); pctx.fillRect(18, 10, 2, 1);
+            }
+        }
+
+        function renderAllPortraits() {
+            drawPixelPortrait('portraitNeoCanvas', 'neo');
+            drawPixelPortrait('portraitTrinityCanvas', 'trinity');
+            drawPixelPortrait('portraitMorpheusCanvas', 'morpheus');
+        }
+
+        // --- 4. MATRIX DIGITAL RAIN & PARTÍCULAS ---
+        const matrixCols = Math.floor(GAME_WIDTH / 10);
+        const matrixDrops = new Array(matrixCols).fill(0).map(() => Math.random() * -50);
+        const katakana = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789";
+
+        function drawMatrixRain() {
+            ctx.fillStyle = 'rgba(2, 8, 3, 0.25)';
+            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+            ctx.font = '9px monospace';
+            for (let i = 0; i < matrixDrops.length; i++) {
+                const char = katakana[Math.floor(Math.random() * katakana.length)];
+                const x = i * 10;
+                const y = matrixDrops[i];
+                ctx.fillStyle = Math.random() > 0.88 ? '#ffffff' : '#00ff41';
+                ctx.fillText(char, x, y);
+                if (y > GAME_HEIGHT && Math.random() > 0.975) matrixDrops[i] = 0;
+                matrixDrops[i] += 7;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
+                this.color = color || '#00ff41';
+                this.alpha = 1.0;
+                this.char = katakana[Math.floor(Math.random() * katakana.length)];
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.alpha -= 0.03;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.font = '8px monospace';
+                ctx.fillText(this.char, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        class FloatingText {
+            constructor(text, x, y, color) {
+                this.text = text;
+                this.x = x;
+                this.y = y;
+                this.color = color || '#00ff41';
+                this.alpha = 1.0;
+            }
+            update() {
+                this.y -= 0.6;
+                this.alpha -= 0.025;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, this.alpha);
+                ctx.fillStyle = this.color;
+                ctx.font = 'bold 12px "VT323", monospace';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        let particles = [];
+        let floatingTexts = [];
+
+        // --- 5. ITEM DROP SYSTEM (CONSUMÍVEIS) ---
+        class ItemDrop {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.width = 8;
+                this.height = 8;
+                this.active = true;
+                this.bobTimer = Math.random() * 10;
+            }
+
+            update() {
+                this.bobTimer += 0.1;
+                this.y += Math.sin(this.bobTimer) * 0.2;
+
+                if (player && this.active) {
+                    if (player.x < this.x + this.width && player.x + player.width > this.x &&
+                        player.y < this.y + this.height && player.y + player.height > this.y) {
+                        this.active = false;
+                        audio.playPickup();
+
+                        if (this.type === 'redPill') {
+                            player.hp = Math.min(player.maxHp, player.hp + 35);
+                            floatingTexts.push(new FloatingText('+35 HP', this.x, this.y, '#ff4444'));
+                        } else if (this.type === 'bluePill') {
+                            bulletTimeEnergy = 100;
+                            floatingTexts.push(new FloatingText('SLOW RECHARGE!', this.x, this.y, '#00d0ff'));
+                        } else if (this.type === 'disk') {
+                            score += 500 * DIFFICULTY_SETTINGS[difficulty].scoreMult;
+                            floatingTexts.push(new FloatingText('+500 PTS', this.x, this.y, '#ffff00'));
+                        }
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                if (this.type === 'redPill') {
+                    ctx.fillStyle = '#ff2222';
+                    ctx.beginPath(); ctx.arc(this.x + 4, this.y + 4, 4, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(this.x + 2, this.y + 3, 2, 2);
+                } else if (this.type === 'bluePill') {
+                    ctx.fillStyle = '#2277ff';
+                    ctx.beginPath(); ctx.arc(this.x + 4, this.y + 4, 4, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(this.x + 2, this.y + 3, 2, 2);
+                } else if (this.type === 'disk') {
+                    ctx.fillStyle = '#00ff41';
+                    ctx.fillRect(this.x, this.y, 8, 8);
+                    ctx.fillStyle = '#000000'; ctx.fillRect(this.x + 2, this.y + 1, 4, 3);
+                }
+                ctx.restore();
+            }
+        }
+
+        let items = [];
+
+        // --- 6. JOGADOR COMPLETO E HABILIDADES ÚNICAS ---
+        class Player {
+            constructor(config) {
+                this.x = 80;
+                this.y = 180;
+                this.width = 16;
+                this.height = 32;
+                this.vx = 0;
+                this.vy = 0;
+                this.maxHp = config.hp;
+                this.hp = config.hp;
+                this.speed = config.speed;
+                this.jumpForce = config.jumpForce;
+                this.meleeDamage = config.meleeDamage;
+                this.config = config;
+
+                this.isGrounded = false;
+                this.facing = 1;
+                this.animTimer = 0;
+                this.isAttacking = false;
+                this.attackTimer = 0;
+                this.attackType = 'punch';
+                this.specialCooldown = 0;
+                this.ghostTrail = [];
+            }
+
+            // HABILIDADE DE CURA (COM LIMITES POR ONDA)
+            heal30Percent() {
+                const diffSettings = DIFFICULTY_SETTINGS[difficulty];
+                if (healUsesInWave >= diffSettings.maxHealPerWave) {
+                    audio.playHit();
+                    floatingTexts.push(new FloatingText(currentLang === 'pt' ? 'LIMITE DA ONDA!' : 'WAVE LIMIT!', this.x - 10, this.y - 12, '#ff3333'));
+                    return;
+                }
+
+                healUsesInWave++;
+                const healAmount = this.maxHp * 0.30;
+                this.hp = Math.min(this.maxHp, this.hp + healAmount);
+                audio.playHealSound();
+                const remaining = diffSettings.maxHealPerWave === Infinity ? '∞' : (diffSettings.maxHealPerWave - healUsesInWave);
+                floatingTexts.push(new FloatingText(`+30% HP (${remaining})`, this.x - 5, this.y - 12, '#00ff41'));
+                for (let i = 0; i < 20; i++) {
+                    particles.push(new Particle(this.x + 8, this.y + 16, '#00ff41'));
+                }
+            }
+
+            update() {
+                if (keys.left) { this.vx = -this.speed; this.facing = -1; }
+                else if (keys.right) { this.vx = this.speed; this.facing = 1; }
+                else { this.vx *= 0.65; }
+
+                if (keys.jump && this.isGrounded) {
+                    this.vy = -this.jumpForce;
+                    this.isGrounded = false;
+                }
+
+                this.vy += 0.38;
+                this.x += this.vx;
+                this.y += this.vy;
+
+                const groundY = 210;
+                if (this.y + this.height >= groundY) {
+                    this.y = groundY - this.height;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                }
+
+                if (this.x < 5) this.x = 5;
+                if (this.x + this.width > GAME_WIDTH - 5) this.x = GAME_WIDTH - 5 - this.width;
+
+                if (this.isAttacking) {
+                    this.attackTimer++;
+                    if (this.attackTimer > 12) {
+                        this.isAttacking = false;
+                        this.attackTimer = 0;
+                    }
+                }
+
+                if (this.specialCooldown > 0) this.specialCooldown--;
+
+                this.animTimer++;
+
+                if (bulletTimeActive && (Math.abs(this.vx) > 0.2 || Math.abs(this.vy) > 0.2)) {
+                    this.ghostTrail.push({ x: this.x, y: this.y, alpha: 0.6 });
+                }
+                this.ghostTrail.forEach(g => g.alpha -= 0.08);
+                this.ghostTrail = this.ghostTrail.filter(g => g.alpha > 0);
+            }
+
+            attackMelee() {
+                if (this.isAttacking) return;
+                this.isAttacking = true;
+                this.attackTimer = 0;
+                this.attackType = selectedCharKey === 'morpheus' ? 'katana' : (selectedCharKey === 'trinity' ? 'kick' : 'punch');
+
+                audio.playHit();
+
+                enemies.forEach(enemy => {
+                    const range = 28;
+                    const inX = this.facing === 1 
+                        ? (enemy.x >= this.x && enemy.x <= this.x + this.width + range)
+                        : (enemy.x + enemy.width >= this.x - range && enemy.x <= this.x);
+                    const inY = Math.abs(enemy.y - this.y) < 24;
+
+                    if (inX && inY) {
+                        enemy.takeDamage(this.meleeDamage);
+                        enemy.vx = this.facing * 4.5;
+                    }
+                });
+            }
+
+            useSpecial() {
+                if (this.specialCooldown > 0) return;
+                this.specialCooldown = 180;
+                audio.playSpecial();
+
+                if (selectedCharKey === 'neo') {
+                    floatingTexts.push(new FloatingText('TELEKINESIS WAVE!', this.x - 10, this.y - 10, '#00ff41'));
+                    bullets.forEach(b => b.active = false);
+                    enemies.forEach(e => {
+                        e.takeDamage(45);
+                        e.vx = (e.x > this.x ? 1 : -1) * 8;
+                    });
+                    for (let i = 0; i < 30; i++) particles.push(new Particle(this.x + 8, this.y + 16, '#00ff41'));
+
+                } else if (selectedCharKey === 'trinity') {
+                    floatingTexts.push(new FloatingText('CRANE KICK!', this.x - 10, this.y - 10, '#00d0ff'));
+                    this.vy = -5;
+                    this.vx = this.facing * 7;
+                    enemies.forEach(e => {
+                        if (Math.abs(e.x - this.x) < 70) {
+                            e.takeDamage(60);
+                            e.vx = this.facing * 6;
+                        }
+                    });
+                    for (let i = 0; i < 30; i++) particles.push(new Particle(this.x + 8, this.y + 16, '#00d0ff'));
+
+                } else if (selectedCharKey === 'morpheus') {
+                    floatingTexts.push(new FloatingText('KATANA WHIRLWIND!', this.x - 10, this.y - 10, '#b050ff'));
+                    enemies.forEach(e => {
+                        if (Math.abs(e.x - this.x) < 80) {
+                            e.takeDamage(80);
+                            e.vx = (e.x > this.x ? 1 : -1) * 7;
+                        }
+                    });
+                    for (let i = 0; i < 35; i++) particles.push(new Particle(this.x + 8, this.y + 16, '#b050ff'));
+                }
+            }
+
+            draw() {
+                this.ghostTrail.forEach(g => {
+                    ctx.fillStyle = `rgba(0, 255, 65, ${g.alpha * 0.4})`;
+                    ctx.fillRect(g.x, g.y, this.width, this.height);
+                });
+
+                ctx.save();
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                if (this.facing === -1) ctx.scale(-1, 1);
+
+                const px = -this.width / 2;
+                const py = -this.height / 2;
+
+                ctx.fillStyle = this.config.coatColor;
+                ctx.fillRect(px - 3, py + 8, 18, 20);
+
+                ctx.fillStyle = '#0a0a0a';
+                ctx.fillRect(px + 3, py + 10, 10, 13);
+
+                ctx.fillStyle = this.config.skinColor;
+                ctx.fillRect(px + 4, py + 1, 8, 8);
+
+                if (this.config.hairColor !== 'transparent') {
+                    ctx.fillStyle = this.config.hairColor;
+                    ctx.fillRect(px + 3, py, 10, 3);
+                    ctx.fillRect(px + 3, py, 3, 5);
+                }
+
+                ctx.fillStyle = this.config.glassesColor;
+                ctx.fillRect(px + 6, py + 4, 6, 2);
+                ctx.fillStyle = this.config.accentColor;
+                ctx.fillRect(px + 7, py + 4, 1, 1);
+
+                ctx.fillStyle = '#050505';
+                const legOff = (Math.abs(this.vx) > 0.1) ? Math.sin(this.animTimer * 0.3) * 3 : 0;
+                ctx.fillRect(px + 3, py + 22, 4, 10 + legOff);
+                ctx.fillRect(px + 9, py + 22, 4, 10 - legOff);
+
+                ctx.fillStyle = '#111111';
+                if (this.isAttacking) {
+                    if (this.attackType === 'punch') {
+                        ctx.fillRect(px + 10, py + 10, 10, 4);
+                        ctx.fillStyle = this.config.skinColor; ctx.fillRect(px + 18, py + 10, 3, 4);
+                    } else if (this.attackType === 'kick') {
+                        ctx.fillRect(px + 8, py + 14, 14, 5);
+                    } else if (this.attackType === 'katana') {
+                        ctx.fillStyle = '#ffffff'; ctx.fillRect(px + 8, py + 2, 18, 2);
+                        ctx.fillStyle = '#ffd700'; ctx.fillRect(px + 6, py + 1, 3, 4);
+                    }
+                } else {
+                    ctx.fillRect(px + 2, py + 11, 4, 9);
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // --- 7. INIMIGOS E BOSSES ---
+        class Enemy {
+            constructor(type, x) {
+                this.type = type;
+                this.x = x;
+                this.y = type === 'sentinel' ? 50 + Math.random() * 80 : 180;
+                this.width = type === 'sentinel' ? 22 : (type === 'smithBoss' ? 20 : 16);
+                this.height = type === 'sentinel' ? 22 : 32;
+                this.vx = 0;
+                this.vy = 0;
+
+                const diff = DIFFICULTY_SETTINGS[difficulty];
+                const baseHp = type === 'smithBoss' ? 250 + wave * 40 : (type === 'sentinel' ? 35 + wave * 8 : 50 + wave * 10);
+                this.hp = baseHp;
+                this.maxHp = this.hp;
+                this.speed = (type === 'sentinel' ? 1.5 : 1.1) * diff.enemySpeedMult;
+                this.facing = 1;
+                this.shootCooldown = Math.floor(Math.random() * 80) + 40;
+                this.isDead = false;
+                this.tentacleAnim = 0;
+            }
+
+            update() {
+                if (!player) return;
+
+                const diff = DIFFICULTY_SETTINGS[difficulty];
+                const dx = player.x - this.x;
+                const dy = player.y - this.y;
+                const dist = Math.hypot(dx, dy);
+
+                this.facing = dx > 0 ? 1 : -1;
+
+                if (this.type === 'agent' || this.type === 'smithBoss') {
+                    if (Math.abs(dx) > 28) {
+                        this.vx = this.facing * this.speed * timeScale;
+                    } else {
+                        this.vx = 0;
+                        if (Math.random() < 0.04) {
+                            player.hp -= 8 * diff.enemyDmgMult;
+                            audio.playHit();
+                            floatingTexts.push(new FloatingText(`-${Math.floor(8 * diff.enemyDmgMult)} HP`, player.x, player.y - 10, '#ff3333'));
+                        }
+                    }
+                    this.x += this.vx;
+
+                    this.shootCooldown -= timeScale;
+                    if (this.shootCooldown <= 0 && Math.abs(dx) < 230) {
+                        bullets.push(new Bullet(this.x + (this.facing === 1 ? 18 : -6), this.y + 10, this.facing * 4.5 * timeScale, false));
+                        this.shootCooldown = 100 + Math.random() * 60;
+                        audio.playShoot();
+                    }
+
+                    if (this.type === 'smithBoss' && Math.random() < 0.003 && enemies.length < 8) {
+                        enemies.push(new Enemy('agent', this.x + 30));
+                        floatingTexts.push(new FloatingText('SMITH DUPLICATED!', this.x, this.y - 15, '#00ff41'));
+                    }
+
+                } else if (this.type === 'sentinel') {
+                    this.vx = (dx / dist) * this.speed * timeScale;
+                    this.vy = (dy / dist) * this.speed * timeScale;
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    this.tentacleAnim += 0.15 * timeScale;
+
+                    if (dist < 18) {
+                        player.hp -= 0.6 * diff.enemyDmgMult;
+                    }
+                }
+            }
+
+            takeDamage(amount) {
+                this.hp -= amount;
+                audio.playHit();
+
+                for (let i = 0; i < 8; i++) particles.push(new Particle(this.x + 8, this.y + 16, '#00ff41'));
+
+                if (this.hp <= 0) {
+                    this.isDead = true;
+                    const diff = DIFFICULTY_SETTINGS[difficulty];
+                    const pts = (this.type === 'smithBoss' ? 300 : (this.type === 'sentinel' ? 30 : 20)) * diff.scoreMult;
+                    score += pts;
+                    floatingTexts.push(new FloatingText(`+${pts} PTS`, this.x, this.y - 10, '#ffff00'));
+
+                    if (Math.random() < diff.dropRate) {
+                        const types = ['redPill', 'bluePill', 'disk'];
+                        const picked = types[Math.floor(Math.random() * types.length)];
+                        items.push(new ItemDrop(this.x, this.y + 10, picked));
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+                if (this.facing === -1) ctx.scale(-1, 1);
+
+                const px = -this.width / 2;
+                const py = -this.height / 2;
+
+                if (this.type === 'agent' || this.type === 'smithBoss') {
+                    ctx.fillStyle = this.type === 'smithBoss' ? '#0d1114' : '#1e2226';
+                    ctx.fillRect(px + 2, py + 9, 12, 14);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(px + 6, py + 9, 4, 6);
+                    ctx.fillStyle = '#005511'; ctx.fillRect(px + 7, py + 10, 2, 5);
+                    ctx.fillStyle = '#f0c090'; ctx.fillRect(px + 4, py + 1, 8, 8);
+                    ctx.fillStyle = '#000000'; ctx.fillRect(px + 5, py + 4, 7, 2);
+                    ctx.fillStyle = '#111'; ctx.fillRect(px + 3, py + 23, 4, 9); ctx.fillRect(px + 9, py + 23, 4, 9);
+                } else if (this.type === 'sentinel') {
+                    ctx.fillStyle = '#2b3036'; ctx.fillRect(px + 4, py + 2, 14, 10); ctx.fillRect(px + 2, py + 4, 18, 6);
+                    ctx.fillStyle = '#ff0033'; ctx.fillRect(px + 6, py + 5, 3, 2); ctx.fillRect(px + 13, py + 5, 3, 2);
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(px + 7, py + 5, 1, 1);
+                    ctx.fillStyle = '#15191d';
+                    for (let i = 0; i < 5; i++) {
+                        const tx = px + 3 + (i * 3.5);
+                        const ty = py + 12 + Math.sin(this.tentacleAnim + i) * 3;
+                        ctx.fillRect(tx, ty, 2, 8);
+                    }
+                }
+
+                ctx.restore();
+
+                if (this.hp < this.maxHp) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; ctx.fillRect(this.x, this.y - 6, this.width, 2);
+                    ctx.fillStyle = '#00ff41'; ctx.fillRect(this.x, this.y - 6, (this.hp / this.maxHp) * this.width, 2);
+                }
+            }
+        }
+
+        // --- 8. BULLETS / PROJÉTEIS ---
+        class Bullet {
+            constructor(x, y, vx, isPlayer) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.isPlayer = isPlayer;
+                this.width = 6;
+                this.height = 2;
+                this.active = true;
+            }
+
+            update() {
+                this.x += this.vx * (this.isPlayer ? 1 : timeScale);
+                if (this.x < 0 || this.x > GAME_WIDTH) this.active = false;
+
+                const diff = DIFFICULTY_SETTINGS[difficulty];
+
+                if (this.isPlayer) {
+                    enemies.forEach(e => {
+                        if (this.x >= e.x && this.x <= e.x + e.width && this.y >= e.y && this.y <= e.y + e.height) {
+                            e.takeDamage(26);
+                            this.active = false;
+                        }
+                    });
+                } else {
+                    if (this.x >= player.x && this.x <= player.x + player.width &&
+                        this.y >= player.y && this.y <= player.y + player.height) {
+                        player.hp -= 10 * diff.enemyDmgMult;
+                        this.active = false;
+                        audio.playHit();
+                        floatingTexts.push(new FloatingText(`-${Math.floor(10 * diff.enemyDmgMult)} HP`, player.x, player.y - 10, '#ff3333'));
+                    }
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = this.isPlayer ? '#00ff41' : '#ff3333';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
+        }
+
+        let player = null;
+        let enemies = [];
+        let bullets = [];
+
+        function spawnWave() {
+            healUsesInWave = 0;
+            const isBossWave = wave === maxWaves;
+            currentStageIndex = (wave - 1) % STAGES.length;
+            document.getElementById('stageNameText').innerText = STAGES[currentStageIndex].name;
+
+            if (isBossWave) {
+                enemies.push(new Enemy('smithBoss', GAME_WIDTH + 20));
+                enemies.push(new Enemy('sentinel', -30));
+                floatingTexts.push(new FloatingText('AGENT SMITH BOSS WAVE!', GAME_WIDTH / 2 - 60, 50, '#ff0033'));
+            } else {
+                const countAgents = wave * 2;
+                const countSentinels = Math.floor(wave / 1.5);
+
+                for (let i = 0; i < countAgents; i++) {
+                    const sx = Math.random() > 0.5 ? -20 - (i * 35) : GAME_WIDTH + 20 + (i * 35);
+                    enemies.push(new Enemy('agent', sx));
+                }
+
+                for (let j = 0; j < countSentinels; j++) {
+                    const sx = Math.random() > 0.5 ? -30 - (j * 40) : GAME_WIDTH + 30 + (j * 40);
+                    enemies.push(new Enemy('sentinel', sx));
+                }
+            }
+        }
+
+        window.setDifficulty = function(diffKey) {
+            difficulty = diffKey;
+            maxWaves = DIFFICULTY_SETTINGS[diffKey].maxWaves;
+            audio.playClick();
+            ['Easy', 'Medium', 'Hard'].forEach(k => {
+                const btn = document.getElementById(`diff${k}`);
+                if (k.toLowerCase() === diffKey) {
+                    btn.classList.add('diff-selected');
+                } else {
+                    btn.classList.remove('diff-selected');
+                }
+            });
+            document.getElementById('hudDiffBadge').innerText = DIFFICULTY_SETTINGS[diffKey].name;
+            document.getElementById('maxWavesText').innerText = maxWaves;
+        };
+
+        window.selectCharacter = function(charKey) {
+            selectedCharKey = charKey;
+            audio.playClick();
+            ['neo', 'trinity', 'morpheus'].forEach(k => {
+                const card = document.getElementById(`card${k.charAt(0).toUpperCase() + k.slice(1)}`);
+                if (k === charKey) {
+                    card.classList.add('border-2', 'border-green-500', 'opacity-100');
+                    card.classList.remove('opacity-60');
+                } else {
+                    card.classList.remove('border-2', 'border-green-500', 'opacity-100');
+                    card.classList.add('opacity-60');
+                }
+            });
+        };
+
+        function getHighScore() {
+            return parseInt(localStorage.getItem(`matrix_highscore_${difficulty}`) || '0');
+        }
+
+        function saveHighScore(newScore) {
+            if (newScore > getHighScore()) {
+                localStorage.setItem(`matrix_highscore_${difficulty}`, newScore);
+            }
+        }
+
+        function initGame() {
+            score = 0;
+            wave = 1;
+            maxWaves = DIFFICULTY_SETTINGS[difficulty].maxWaves;
+            bulletTimeEnergy = 100;
+            bulletTimeActive = false;
+            timeScale = 1.0;
+            healUsesInWave = 0;
+            bullets = [];
+            enemies = [];
+            particles = [];
+            floatingTexts = [];
+            items = [];
+
+            const config = CHARACTERS[selectedCharKey];
+            player = new Player(config);
+
+            document.getElementById('hudCharName').innerText = config.name;
+            document.getElementById('hudDiffBadge').innerText = DIFFICULTY_SETTINGS[difficulty].name;
+            document.getElementById('maxWavesText').innerText = maxWaves;
+            drawPixelPortrait('hudPortraitCanvas', selectedCharKey);
+
+            document.getElementById('hud').classList.remove('hidden');
+            document.getElementById('btnPause').classList.remove('hidden');
+
+            audio.startMusic();
+            spawnWave();
+            gameState = 'PLAYING';
+        }
+
+        function triggerVictory() {
+            saveHighScore(score);
+            gameState = 'VICTORY';
+            audio.stopMusic();
+            document.getElementById('victoryScore').innerText = score;
+            document.getElementById('victoryHighScore').innerText = getHighScore();
+            document.getElementById('victoryMenu').classList.remove('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('btnPause').classList.add('hidden');
+        }
+
+        function drawStageBackground() {
+            const stage = STAGES[currentStageIndex];
+
+            if (stage.bgType === 'rooftops') {
+                ctx.fillStyle = '#020d05'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                ctx.fillStyle = '#041c0a';
+                ctx.fillRect(20, 90, 60, 120); ctx.fillRect(100, 70, 80, 140);
+                ctx.fillRect(220, 110, 70, 100); ctx.fillRect(330, 80, 90, 130);
+                ctx.fillStyle = '#082b10'; ctx.fillRect(0, 210, GAME_WIDTH, 60);
+
+            } else if (stage.bgType === 'subway') {
+                ctx.fillStyle = '#080d09'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                ctx.strokeStyle = 'rgba(0, 255, 65, 0.15)';
+                for (let y = 30; y < 210; y += 15) {
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(GAME_WIDTH, y); ctx.stroke();
+                }
+                ctx.fillStyle = '#111e14'; ctx.fillRect(0, 210, GAME_WIDTH, 60);
+
+            } else if (stage.bgType === 'dojo') {
+                ctx.fillStyle = '#140c06'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                ctx.strokeStyle = 'rgba(255, 180, 100, 0.2)';
+                for (let x = 40; x < GAME_WIDTH; x += 60) {
+                    ctx.strokeRect(x, 40, 45, 140);
+                }
+                ctx.fillStyle = '#2b1a0e'; ctx.fillRect(0, 210, GAME_WIDTH, 60);
+
+            } else if (stage.bgType === 'construct') {
+                ctx.fillStyle = '#000501'; ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+                ctx.strokeStyle = 'rgba(0, 255, 65, 0.3)';
+                for (let x = 0; x < GAME_WIDTH; x += 20) {
+                    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, GAME_HEIGHT); ctx.stroke();
+                }
+                ctx.fillStyle = '#021808'; ctx.fillRect(0, 210, GAME_WIDTH, 60);
+            }
+        }
+
+        // --- 9. LOOP PRINCIPAL DE ANIMAÇÃO ---
+        function gameLoop() {
+            ctx.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+            if (gameState === 'MENU' || gameState === 'CHAR_SELECT') {
+                drawMatrixRain();
+            } else if (gameState === 'PLAYING' || gameState === 'PAUSED') {
+                
+                drawStageBackground();
+
+                if (gameState === 'PLAYING') {
+                    if (keys.focus && bulletTimeEnergy > 5) {
+                        if (!bulletTimeActive) {
+                            bulletTimeActive = true;
+                            audio.playSloMo();
+                        }
+                        timeScale = 0.3;
+                        bulletTimeEnergy -= CHARACTERS[selectedCharKey].focusDrain;
+                    } else {
+                        bulletTimeActive = false;
+                        timeScale = 1.0;
+                        if (bulletTimeEnergy < 100) bulletTimeEnergy += 0.25;
+                    }
+
+                    player.update();
+                    enemies.forEach(e => e.update());
+                    bullets.forEach(b => b.update());
+                    particles.forEach(p => p.update());
+                    floatingTexts.forEach(ft => ft.update());
+                    items.forEach(it => it.update());
+
+                    enemies = enemies.filter(e => !e.isDead);
+                    bullets = bullets.filter(b => b.active);
+                    particles = particles.filter(p => p.alpha > 0);
+                    floatingTexts = floatingTexts.filter(ft => ft.alpha > 0);
+                    items = items.filter(it => it.active);
+
+                    if (enemies.length === 0) {
+                        if (wave >= maxWaves) {
+                            triggerVictory();
+                        } else {
+                            wave++;
+                            spawnWave();
+                        }
+                    }
+                }
+
+                player.draw();
+                enemies.forEach(e => e.draw());
+                bullets.forEach(b => b.draw());
+                particles.forEach(p => p.draw());
+                floatingTexts.forEach(ft => ft.draw());
+                items.forEach(it => it.draw());
+
+                document.getElementById('hpBar').style.width = `${Math.max(0, (player.hp / player.maxHp) * 100)}%`;
+                document.getElementById('hudHPText').innerText = `${Math.max(0, Math.floor(player.hp))}/${player.maxHp}`;
+                document.getElementById('focusBar').style.width = `${Math.max(0, bulletTimeEnergy)}%`;
+                document.getElementById('scoreText').innerText = score;
+                document.getElementById('highScoreText').innerText = getHighScore();
+                document.getElementById('waveText').innerText = wave;
+                document.getElementById('enemyCountText').innerText = enemies.length;
+
+                if (player.hp <= 0) {
+                    saveHighScore(score);
+                    gameState = 'GAMEOVER';
+                    audio.stopMusic();
+                    document.getElementById('finalScore').innerText = score;
+                    document.getElementById('finalHighScore').innerText = getHighScore();
+                    document.getElementById('finalWave').innerText = wave;
+                    document.getElementById('gameOverMenu').classList.remove('hidden');
+                    document.getElementById('hud').classList.add('hidden');
+                    document.getElementById('btnPause').classList.add('hidden');
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // CONTROLES DE TECLADO
+        window.addEventListener('keydown', (e) => {
+            audio.init();
+
+            if (e.key === 'Enter') {
+                const intro = document.getElementById('introTerminal');
+                if (!intro.classList.contains('hidden')) {
+                    advanceIntroLine();
+                    return;
+                }
+            }
+
+            if ((e.key === 'f' || e.key === 'F') && gameState === 'PLAYING' && player) {
+                player.heal30Percent();
+            }
+
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = true;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = true;
+            if (e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'ArrowUp') keys.jump = true;
+            if (e.key === 'z' || e.key === 'Z' || e.key === 'j' || e.key === 'J') {
+                if (!keys.melee && player) player.attackMelee();
+                keys.melee = true;
+            }
+            if (e.key === 'x' || e.key === 'X' || e.key === 'k' || e.key === 'K') {
+                if (!keys.special && player) player.useSpecial();
+                keys.special = true;
+            }
+            if (e.key === 'c' || e.key === 'C' || e.key === 'l' || e.key === 'L' || e.key === 'Shift') keys.focus = true;
+
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                togglePause();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') keys.left = false;
+            if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') keys.right = false;
+            if (e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'ArrowUp') keys.jump = false;
+            if (e.key === 'z' || e.key === 'Z' || e.key === 'j' || e.key === 'J') keys.melee = false;
+            if (e.key === 'x' || e.key === 'X' || e.key === 'k' || e.key === 'K') keys.special = false;
+            if (e.key === 'c' || e.key === 'C' || e.key === 'l' || e.key === 'L' || e.key === 'Shift') keys.focus = false;
+        });
+
+        function togglePause() {
+            if (gameState !== 'PLAYING' && gameState !== 'PAUSED') return;
+            audio.playClick();
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                document.getElementById('pauseMenu').classList.remove('hidden');
+            } else {
+                gameState = 'PLAYING';
+                document.getElementById('pauseMenu').classList.add('hidden');
+                document.getElementById('instructionsModal').classList.add('hidden');
+            }
+        }
+
+        // TOUCH BINDINGS PARA CELULAR
+        const bindTouch = (id, keyName) => {
+            const btn = document.getElementById(id);
+            if (!btn) return;
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                audio.init();
+                keys[keyName] = true;
+                if (keyName === 'melee' && player) player.attackMelee();
+                if (keyName === 'special' && player) player.useSpecial();
+            });
+            btn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                keys[keyName] = false;
+            });
+        };
+
+        bindTouch('btnLeft', 'left');
+        bindTouch('btnRight', 'right');
+        bindTouch('btnJump', 'jump');
+        bindTouch('btnMelee', 'melee');
+        bindTouch('btnSpecial', 'special');
+        bindTouch('btnFocus', 'focus');
+
+        // BOTAO DE CURA TOUCH
+        const btnMobHeal = document.getElementById('btnMobileHeal');
+        if (btnMobHeal) {
+            btnMobHeal.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                audio.init();
+                if (gameState === 'PLAYING' && player) {
+                    player.heal30Percent();
+                }
+            });
+        }
+
+        // BOTÕES UI & AUDIOS
+        document.getElementById('btnToggleMusic').addEventListener('click', () => {
+            audio.init();
+            audio.musicEnabled = !audio.musicEnabled;
+            const btn = document.getElementById('btnToggleMusic');
+            const pauseBtn = document.getElementById('btnPauseMusicToggle');
+            if (audio.musicEnabled) {
+                btn.innerText = '🔊 MÚSICA';
+                pauseBtn.innerText = currentLang === 'pt' ? 'MÚSICA: LIGADA' : 'MUSIC: ON';
+                if (gameState === 'PLAYING') audio.startMusic();
+            } else {
+                btn.innerText = '🔇 MÚSICA';
+                pauseBtn.innerText = currentLang === 'pt' ? 'MÚSICA: DESLIGADA' : 'MUSIC: OFF';
+                audio.stopMusic();
+            }
+        });
+
+        document.getElementById('btnPauseMusicToggle').addEventListener('click', () => {
+            document.getElementById('btnToggleMusic').click();
+        });
+
+        document.getElementById('btnPauseHowToPlay').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('instructionsModal').classList.remove('hidden');
+        });
+
+        document.getElementById('btnToggleCRT').addEventListener('click', () => {
+            const root = document.getElementById('bodyRoot');
+            const btn = document.getElementById('btnToggleCRT');
+            if (root.classList.contains('crt')) {
+                root.classList.remove('crt');
+                root.classList.add('no-crt');
+                btn.innerText = '📺 CRT: OFF';
+            } else {
+                root.classList.remove('no-crt');
+                root.classList.add('crt');
+                btn.innerText = '📺 CRT: ON';
+            }
+        });
+
+        document.getElementById('btnPause').addEventListener('click', togglePause);
+        document.getElementById('btnResume').addEventListener('click', togglePause);
+
+        document.getElementById('btnQuit').addEventListener('click', () => {
+            audio.stopMusic();
+            gameState = 'MENU';
+            document.getElementById('pauseMenu').classList.add('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('btnPause').classList.add('hidden');
+            document.getElementById('mainMenu').classList.remove('hidden');
+        });
+
+        document.getElementById('btnRedPill').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('charSelectMenu').classList.remove('hidden');
+            renderAllPortraits();
+            gameState = 'CHAR_SELECT';
+        });
+
+        document.getElementById('btnBluePill').addEventListener('click', () => {
+            audio.init();
+            audio.playClick();
+            document.getElementById('instructionsModal').classList.remove('hidden');
+        });
+
+        document.getElementById('btnCloseInstructions').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('instructionsModal').classList.add('hidden');
+        });
+
+        document.getElementById('btnStartGame').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('charSelectMenu').classList.add('hidden');
+            initGame();
+        });
+
+        document.getElementById('btnRestart').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('gameOverMenu').classList.add('hidden');
+            initGame();
+        });
+
+        document.getElementById('btnVictoryRestart').addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('victoryMenu').classList.add('hidden');
+            initGame();
+        });
+
+        // INICIALIZAÇÃO
+        renderAllPortraits();
+        updateTexts();
+        advanceIntroLine();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
