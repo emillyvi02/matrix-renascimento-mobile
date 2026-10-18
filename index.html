@@ -31,24 +31,32 @@
             font-family: 'VT323', monospace;
         }
 
-        /* Container do Jogo ajustado e travado na proporção correta para não achatar nada em celulares */
+        /* Container do Jogo ajustado para ocupar a tela inteira do celular */
         #gameContainer {
             position: relative;
-            width: 100%;
-            max-width: 800px;
-            aspect-ratio: 16 / 9;
+            width: 100vw;
+            height: 100vh;
+            max-width: 900px;
             max-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             background: #000;
             overflow: hidden;
+        }
+
+        @media (min-width: 640px) {
+            #gameContainer {
+                height: 96vh;
+                max-height: 720px;
+            }
         }
 
         canvas {
             width: 100%;
             height: 100%;
+            object-fit: contain;
             image-rendering: pixelated;
             image-rendering: crisp-edges;
             display: block;
@@ -174,7 +182,7 @@
         </div>
 
         <!-- HUD do Jogo -->
-        <div id="hud" class="absolute top-12 left-2 right-2 sm:top-14 sm:left-3 sm:right-3 flex justify-between items-start pointer-events-none hidden font-pixel z-10">
+        <div id="hud" class="absolute top-10 left-2 right-2 sm:top-12 sm:left-3 sm:right-3 flex justify-between items-start pointer-events-none hidden font-pixel z-10">
             <!-- Stats do Jogador -->
             <div class="flex flex-col gap-0.5 bg-black/85 p-1.5 rounded border border-green-500/60 shadow-[0_0_8px_rgba(0,255,65,0.2)]">
                 <div class="flex items-center gap-2">
@@ -355,7 +363,7 @@
             </button>
         </div>
 
-        <!-- CONTROLES MOBILE OTIMIZADOS, DENTRO DO CONTAINER E PROPORCIONAIS -->
+        <!-- CONTROLES MOBILE OTIMIZADOS E POSICIONADOS DENTRO DA ÁREA VISÍVEL -->
         <div id="mobileControls" class="absolute bottom-2 left-2 right-2 flex justify-between items-end pointer-events-none z-20">
             <!-- Direcional Esquerda / Direita / Cura -->
             <div class="flex gap-2 pointer-events-auto items-center">
