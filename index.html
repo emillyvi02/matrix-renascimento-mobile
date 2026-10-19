@@ -137,7 +137,7 @@
             box-shadow: 0 0 15px #00ff41;
         }
 
-        /* --- BOTÕES MOBILE POSICIONADOS MAIS PARA CIMA (AJUSTE FINO) --- */
+        /* --- BOTÕES MOBILE POSICIONADOS MAIS PARA CIMA --- */
         #mobileControls {
             position: absolute;
             bottom: 18px;
@@ -1480,7 +1480,14 @@
         });
 
         document.getElementById('btnPauseMusicToggle').addEventListener('click', () => { document.getElementById('btnToggleMusic').click(); });
-        document.getElementById('btnPauseHowToPlay').addEventListener('click', () => { audio.playClick(); document.getElementById('instructionsModal').classList.remove('hidden'); });
+        
+        // CORREÇÃO DO MANUAL ABRINDO CORRETAMENTE
+        document.getElementById('btnPauseHowToPlay').addEventListener('click', () => { 
+            audio.playClick(); 
+            document.getElementById('pauseMenu').classList.add('hidden');
+            document.getElementById('instructionsModal').classList.remove('hidden'); 
+        });
+
         document.getElementById('btnToggleCRT').addEventListener('click', () => {
             const root = document.getElementById('bodyRoot');
             const btn = document.getElementById('btnToggleCRT');
@@ -1505,8 +1512,18 @@
             renderAllPortraits(); gameState = 'CHAR_SELECT';
         });
 
-        document.getElementById('btnBluePill').addEventListener('click', () => { audio.init(); audio.playClick(); document.getElementById('instructionsModal').classList.add('hidden'); });
-        document.getElementById('btnCloseInstructions').addEventListener('click', () => { audio.playClick(); document.getElementById('instructionsModal').classList.add('hidden'); });
+        // CORREÇÃO DO BOTÃO DA PÍLULA AZUL NO MENU PRINCIPAL
+        document.getElementById('btnBluePill').addEventListener('click', () => { 
+            audio.init(); 
+            audio.playClick(); 
+            document.getElementById('instructionsModal').classList.remove('hidden'); 
+        });
+
+        document.getElementById('btnCloseInstructions').addEventListener('click', () => { 
+            audio.playClick(); 
+            document.getElementById('instructionsModal').classList.add('hidden'); 
+        });
+
         document.getElementById('btnStartGame').addEventListener('click', () => { audio.playClick(); document.getElementById('charSelectMenu').classList.add('hidden'); initGame(); });
         document.getElementById('btnRestart').addEventListener('click', () => { audio.playClick(); document.getElementById('gameOverMenu').classList.add('hidden'); initGame(); });
         document.getElementById('btnVictoryRestart').addEventListener('click', () => { audio.playClick(); document.getElementById('victoryMenu').classList.add('hidden'); initGame(); });
