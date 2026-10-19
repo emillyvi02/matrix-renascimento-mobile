@@ -98,6 +98,7 @@
             color: #00ff41;
             transition: all 0.2s ease;
             text-shadow: 0 0 8px #00ff41;
+            cursor: pointer;
         }
 
         .matrix-btn:hover, .matrix-btn:active {
@@ -168,6 +169,18 @@
             gap: 10px;
             pointer-events: auto;
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 15, 5, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #00ff41;
+            border-radius: 2px;
+        }
     </style>
 </head>
 <body class="select-none crt" id="bodyRoot">
@@ -175,28 +188,33 @@
     <!-- Container do Jogo -->
     <div id="gameContainer" class="matrix-border overflow-hidden">
         
-        <!-- Topo: Botões Rápidos e Audio Controls -->
-        <div class="absolute top-2 right-2 flex items-center gap-1 z-30">
-            <button id="btnToggleLang" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
-                🌐 PT
-            </button>
-            <button id="btnToggleMusic" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
-                🔊 MÚSICA
-            </button>
-            <button id="btnToggleCRT" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
-                📺 CRT
-            </button>
-            <button id="btnPause" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-black transition hidden">
-                ⏸ PAUSA
-            </button>
+        <!-- Topo Superior: Botões de Configuração (Idioma, Música, CRT e Pausa) -->
+        <div class="absolute top-2 right-2 left-2 flex items-center justify-between z-30 pointer-events-auto">
+            <div class="text-[10px] font-pixel text-green-400 tracking-wider bg-black/70 px-2 py-0.5 rounded border border-green-900/60 shadow">
+                MATRIX v2.5
+            </div>
+            <div class="flex items-center gap-1">
+                <button id="btnToggleLang" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+                    🌐 PT
+                </button>
+                <button id="btnToggleMusic" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+                    🔊 MÚSICA
+                </button>
+                <button id="btnToggleCRT" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-green-500 text-green-400 rounded hover:bg-green-500 hover:text-black transition">
+                    📺 CRT
+                </button>
+                <button id="btnPause" class="px-1.5 py-0.5 text-[9px] sm:text-xs bg-black/80 border border-yellow-500 text-yellow-400 rounded hover:bg-yellow-500 hover:text-black transition hidden">
+                    ⏸ PAUSA
+                </button>
+            </div>
         </div>
 
         <!-- INTRODUÇÃO CINEMATOGRÁFICA INTERATIVA -->
-        <div id="introTerminal" class="absolute inset-0 bg-black z-50 p-3 sm:p-6 font-mono text-xs sm:text-sm text-green-400 flex flex-col justify-between overflow-hidden">
+        <div id="introTerminal" class="absolute inset-0 bg-black z-50 p-3 sm:p-6 font-mono text-xs sm:text-sm text-green-400 flex flex-col justify-between overflow-hidden pt-10">
             <div id="terminalText" class="space-y-1.5 leading-relaxed overflow-y-auto max-h-[75%] pr-2"></div>
             
             <div class="flex flex-col sm:flex-row justify-between items-center border-t border-green-900 pt-2 gap-2 text-[11px] text-green-600">
-                <span id="introInstruction" class="text-yellow-400 animate-pulse font-bold text-center">▶ TOQUE AQUI OU ENTER PARA AVANÇAR</span>
+                <span id="introInstruction" class="text-yellow-400 animate-pulse font-bold text-center" data-i18n="introInstructionText">▶ TOQUE AQUI OU ENTER PARA AVANÇAR</span>
                 <button id="btnSkipIntro" class="text-green-300 hover:text-green-100 border border-green-500 px-3 py-1 bg-green-950/80 rounded" data-i18n="skipIntro">AVANÇAR / PULAR</button>
             </div>
         </div>
@@ -221,8 +239,8 @@
                 </div>
                 <!-- Barra Energy/Bullet Time -->
                 <div class="flex items-center justify-between text-[9px] text-cyan-400 font-mono">
-                    <span id="hudAbilityLabel">BULLET TIME</span>
-                    <span id="focusReadyText" class="text-[8px] text-green-400 font-bold">CURA [F]</span>
+                    <span id="hudAbilityLabel" data-i18n="bulletTimeHud">BULLET TIME</span>
+                    <span id="focusReadyText" class="text-[8px] text-green-400 font-bold" data-i18n="healReadyText">CURA [F]</span>
                 </div>
                 <div class="w-24 sm:w-44 h-1.5 bg-gray-950 border border-cyan-500 rounded overflow-hidden p-0.5">
                     <div id="focusBar" class="h-full bg-cyan-400 transition-all duration-75" style="width: 100%;"></div>
@@ -242,7 +260,7 @@
         <canvas id="gameCanvas"></canvas>
 
         <!-- MENU PRINCIPAL -->
-        <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-3 z-30 text-center overflow-y-auto">
+        <div id="mainMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-3 z-30 text-center overflow-y-auto pt-10">
             <h1 class="text-2xl sm:text-6xl font-pixel text-green-400 tracking-widest mb-1 animate-pulse drop-shadow-[0_0_15px_rgba(0,255,65,0.9)]">
                 MATRIX RENASCIMENTO
             </h1>
@@ -262,11 +280,11 @@
                 </button>
             </div>
 
-            <div class="text-[10px] text-green-600 font-mono tracking-widest" data-i18n="cyberpunkSubtitle">CYBERPUNK ACTION • DEFTONES OST • HD SPRITES</div>
+            <div class="text-[10px] text-green-600 font-mono tracking-widest" data-i18n="cyberpunkSubtitle">CYBERPUNK ACTION • HD SPRITES</div>
         </div>
 
         <!-- SELEÇÃO DE PERSONAGEM E DIFICULDADE -->
-        <div id="charSelectMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-2 z-30 hidden overflow-y-auto">
+        <div id="charSelectMenu" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-2 z-30 hidden overflow-y-auto pt-10">
             <h2 class="text-base sm:text-3xl font-pixel text-green-400 mb-1 drop-shadow-[0_0_10px_#00ff41] text-center" data-i18n="selectCharTitle">
                 SELEÇÃO DE OPERADOR & NÍVEL DE AMEAÇA
             </h2>
@@ -323,18 +341,77 @@
             </button>
         </div>
 
-        <!-- MODAL DE INSTRUÇÕES -->
-        <div id="instructionsModal" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-4 z-50 hidden text-left max-w-sm mx-auto rounded border border-green-500 overflow-y-auto">
-            <h3 class="text-2xl font-pixel text-green-400 mb-2 border-b border-green-500 pb-1 w-full text-center" data-i18n="manualTitle">MANUAL DO OPERADOR</h3>
-            <div class="text-[11px] font-mono space-y-1.5 text-green-300 mb-4 w-full">
-                <p><span class="text-black bg-green-400 font-bold px-1 rounded">TOQUE / BOTÕES TELA</span>: <span data-i18n="ctrlMobDesc">Use os botões na tela do celular</span></p>
-                <p><span class="text-black bg-green-400 font-bold px-1 rounded">F / CURA</span>: Regenerar +30% de Vida (<span data-i18n="healLimitNote">Limitado por Onda</span>)</p>
-                <p><span class="text-black bg-green-400 font-bold px-1 rounded">P / ESC</span>: <span data-i18n="ctrlPauseDesc">Pausar / Configurações</span></p>
-                <div class="bg-green-950/80 p-1.5 border border-green-500/50 rounded mt-1 text-[10px] text-green-200">
-                    <b data-i18n="consumablesTitle">CONSUMÍVEIS:</b> <span data-i18n="consumablesDesc">Pegue a <b>Pílula Vermelha</b> (+HP), <b>Pílula Azul</b> (+Stamina) e o <b>Disquete</b> (+500 Pts)!</span>
+        <!-- MODAL DE INSTRUÇÕES COM GUIA DETALHADO DOS BOTÕES -->
+        <div id="instructionsModal" class="absolute inset-0 flex flex-col items-center justify-center glass-panel p-3 sm:p-4 z-50 hidden text-left max-w-md mx-auto rounded border border-green-500 overflow-y-auto my-auto max-h-[90dvh]">
+            <h3 class="text-xl sm:text-2xl font-pixel text-green-400 mb-2 border-b border-green-500 pb-1 w-full text-center tracking-widest" data-i18n="manualTitle">MANUAL DO OPERADOR</h3>
+            
+            <div class="text-[10px] sm:text-[11px] font-mono space-y-2 text-green-300 mb-3 w-full overflow-y-auto max-h-[60vh] pr-1">
+                <!-- SEÇÃO CONTROLES TECLADO / PC -->
+                <div class="bg-black/80 p-2 border border-green-500/60 rounded">
+                    <h4 class="text-green-400 font-bold mb-1 border-b border-green-800 text-xs flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-ping"></span>
+                        <span data-i18n="pcControlsTitle">CONTROLES TECLADO (PC):</span>
+                    </h4>
+                    <div class="grid grid-cols-2 gap-1 text-[10px]">
+                        <div><span class="matrix-btn px-1 text-[9px] font-bold">A / D</span> ou <span class="matrix-btn px-1 text-[9px] font-bold">◄ ►</span>: <span data-i18n="moveDesc">Mover</span></div>
+                        <div><span class="matrix-btn px-1 text-[9px] font-bold">W / ESPAÇO</span>: <span data-i18n="jumpDesc">Pular</span></div>
+                        <div><span class="matrix-btn px-1 text-[9px] font-bold">Z / J</span>: <span data-i18n="attackDesc">Atacar Golpe</span></div>
+                        <div><span class="matrix-btn px-1 text-[9px] font-bold">X / K</span>: <span data-i18n="specialDesc">Ataque Especial</span></div>
+                        <div><span class="matrix-btn px-1 text-[9px] font-bold">C / L / SHIFT</span>: <span data-i18n="bulletTimeDesc">Slow-Motion</span></div>
+                        <div><span class="matrix-btn px-1 text-[9px] font-bold">F</span>: <span data-i18n="healDesc">Regenerar Cura</span></div>
+                        <div class="col-span-2"><span class="matrix-btn px-1 text-[9px] font-bold">P / ESC</span>: <span data-i18n="pauseDesc">Pausar / Menu</span></div>
+                    </div>
+                </div>
+
+                <!-- SEÇÃO CONTROLES MOBILE / BOTÕES VERDES -->
+                <div class="bg-black/80 p-2 border border-green-500/60 rounded space-y-1">
+                    <h4 class="text-green-400 font-bold border-b border-green-800 text-xs flex items-center gap-1">
+                        <span class="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+                        <span data-i18n="mobControlsTitle">GUIAS DOS BOTÕES TÁTEIS (MODO JOGO):</span>
+                    </h4>
+                    <ul class="space-y-1 text-[10px]">
+                        <li class="flex items-center gap-1.5">
+                            <span class="matrix-btn w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-xs text-green-300">◄ ►</span>
+                            <span><b data-i18n="mobMoveBold">Mover Esquerda / Direita:</b> <span data-i18n="mobMoveHelp">Caminhe pelo mapa e desvie dos tiros dos Agentes.</span></span>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="matrix-btn px-1.5 py-0.5 rounded-full text-[9px] font-bold text-emerald-200 border-emerald-400" data-i18n="mobHealBtnText">CURA</span>
+                            <span><b data-i18n="mobHealBold">Cura +30% HP:</b> <span data-i18n="mobHealHelp">Restaura vida. Restrito por limites de onda.</span></span>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="matrix-btn w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-[9px] text-green-300" data-i18n="mobJump">PULO</span>
+                            <span><b data-i18n="mobJumpBold">Pulo Voador:</b> <span data-i18n="mobJumpHelp">Esquive de balas e alcance inimigos aéreos.</span></span>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="matrix-btn w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-[9px] text-cyan-200 border-cyan-400" data-i18n="mobSlowBtnText">SLOW</span>
+                            <span><b data-i18n="mobSlowBold">Bullet Time:</b> <span data-i18n="mobSlowHelp">Desacelera o tempo e a simulação para reações rápidas.</span></span>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="matrix-btn w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-[9px] text-green-300" data-i18n="mobMelee">GOLP</span>
+                            <span><b data-i18n="mobMeleeBold">Golpe Corpo a Corpo:</b> <span data-i18n="mobMeleeHelp">Soco, chute voador ou espada segundo operador.</span></span>
+                        </li>
+                        <li class="flex items-center gap-1.5">
+                            <span class="matrix-btn w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-[9px] text-red-200 border-red-400" data-i18n="mobSpec">ESP</span>
+                            <span><b data-i18n="mobSpecBold">Golpe Especial:</b> <span data-i18n="mobSpecHelp">Pulso telecinético, Crane Kick ou Katana.</span></span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- SEÇÃO REGRAS DIFICULDADE & CURA -->
+                <div class="bg-green-950/80 p-2 border border-green-500/50 rounded text-[10px] text-green-200 space-y-1">
+                    <div class="text-yellow-400 font-bold" data-i18n="rulesHealTitle">🛡 REGRAS DE REGENERAÇÃO DE CURA POR ONDA:</div>
+                    <div>• <b data-i18n="ruleEasyTitle">FÁCIL:</b> <span data-i18n="ruleEasy">Cura Ilimitada (Uso sem restrições)</span></div>
+                    <div>• <b data-i18n="ruleMedTitle">MÉDIO:</b> <span data-i18n="ruleMed">Até 40 Usos por Onda</span></div>
+                    <div>• <b data-i18n="ruleHardTitle">DIFÍCIL:</b> <span data-i18n="ruleHard">Até 25 Usos por Onda</span></div>
+                </div>
+
+                <div class="bg-green-950/80 p-2 border border-green-500/50 rounded text-[10px] text-green-200">
+                    <b data-i18n="consumablesTitle">CONSUMÍVEIS EM CAMPO:</b> 
+                    <span data-i18n="consumablesDesc">Pegue a <b>Pílula Vermelha</b> (+HP), <b>Pílula Azul</b> (+Stamina Bullet-Time) e o <b>Disquete</b> (+500 Bônus Pts)!</span>
                 </div>
             </div>
-            <button id="btnCloseInstructions" class="matrix-btn px-6 py-1.5 rounded text-xs font-bold" data-i18n="backBtn">
+
+            <button id="btnCloseInstructions" class="matrix-btn px-6 py-1.5 rounded text-xs font-bold w-full" data-i18n="backBtn">
                 VOLTAR
             </button>
         </div>
@@ -345,7 +422,8 @@
             <div class="flex flex-col gap-2 w-48 font-mono text-xs">
                 <button id="btnResume" class="matrix-btn py-1.5 rounded" data-i18n="resumeBtn">CONTINUAR [P]</button>
                 <button id="btnPauseHowToPlay" class="matrix-btn py-1.5 rounded" data-i18n="manualBtn">COMO JOGAR (MANUAL)</button>
-                <button id="btnPauseMusicToggle" class="matrix-btn py-1.5 rounded">MÚSICA: LIGADA</button>
+                <button id="btnPauseMusicToggle" class="matrix-btn py-1.5 rounded" data-i18n="musicOnState">MÚSICA: LIGADA</button>
+                <button id="btnPauseQuitToLobby" class="matrix-btn py-1.5 rounded border-cyan-500 text-cyan-300 hover:bg-cyan-500 hover:text-black" data-i18n="backToLobbyBtn">VOLTAR AO LOBBY</button>
                 <button id="btnQuit" class="matrix-btn py-1.5 rounded border-red-500 text-red-400 hover:bg-red-500 hover:text-black" data-i18n="quitBtn">ABANDONAR</button>
             </div>
         </div>
@@ -363,9 +441,14 @@
                 <div class="flex justify-between"><span data-i18n="finalWaveLabel">ONDA:</span> <span id="finalWave" class="text-white">0</span></div>
             </div>
 
-            <button id="btnRestart" class="matrix-btn px-6 py-2 rounded text-xl font-pixel" data-i18n="reconnectBtn">
-                RECONECTAR
-            </button>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button id="btnRestart" class="matrix-btn px-5 py-2 rounded text-lg font-pixel" data-i18n="reconnectBtn">
+                    RECONECTAR
+                </button>
+                <button id="btnGameOverLobby" class="matrix-btn px-5 py-2 rounded text-lg font-pixel border-cyan-500 text-cyan-300 hover:bg-cyan-500 hover:text-black" data-i18n="backToLobbyBtn">
+                    VOLTAR AO LOBBY
+                </button>
+            </div>
         </div>
 
         <!-- MENU DE VITÓRIA -->
@@ -377,13 +460,18 @@
 
             <div class="bg-black/90 border border-green-500/80 p-3 rounded mb-4 w-64 text-left font-pixel text-lg space-y-0.5 text-green-400 shadow-[0_0_15px_rgba(0,255,65,0.3)]">
                 <div class="flex justify-between"><span data-i18n="perfLabel">DESEMPENHO:</span> <span class="text-yellow-300" data-i18n="masterText">MESTRE</span></div>
-                <div class="flex justify-between"><span data-i18n="scoreLabel">PONTUAÇÃO:</span> <span id="victoryScore" class="text-white">0</span></div>
+                <div class="flex justify-between"><span data-i18n="scoreLabel">PONTOS:</span> <span id="victoryScore" class="text-white">0</span></div>
                 <div class="flex justify-between"><span data-i18n="highScoreLabel">RECORDE:</span> <span id="victoryHighScore" class="text-yellow-300">0</span></div>
             </div>
 
-            <button id="btnVictoryRestart" class="matrix-btn px-6 py-2 rounded text-xl font-pixel" data-i18n="playAgainBtn">
-                JOGAR NOVAMENTE
-            </button>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <button id="btnVictoryRestart" class="matrix-btn px-5 py-2 rounded text-lg font-pixel" data-i18n="playAgainBtn">
+                    JOGAR NOVAMENTE
+                </button>
+                <button id="btnVictoryLobby" class="matrix-btn px-5 py-2 rounded text-lg font-pixel border-cyan-500 text-cyan-300 hover:bg-cyan-500 hover:text-black" data-i18n="backToLobbyBtn">
+                    VOLTAR AO LOBBY
+                </button>
+            </div>
         </div>
 
         <!-- CONTROLES MOBILE POSICIONADOS MAIS PARA CIMA -->
@@ -392,13 +480,13 @@
             <div class="control-group-left">
                 <button id="btnLeft" class="w-12 h-12 bg-green-950/95 border-2 border-green-400 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-xl shadow-[0_0_10px_rgba(0,255,65,0.3)]">◄</button>
                 <button id="btnRight" class="w-12 h-12 bg-green-950/95 border-2 border-green-400 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-xl shadow-[0_0_10px_rgba(0,255,65,0.3)]">►</button>
-                <button id="btnMobileHeal" class="w-12 h-12 bg-emerald-950/95 border-2 border-emerald-400 text-emerald-200 rounded-full flex items-center justify-center active:bg-emerald-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,65,0.3)]">CURA</button>
+                <button id="btnMobileHeal" class="w-12 h-12 bg-emerald-950/95 border-2 border-emerald-400 text-emerald-200 rounded-full flex items-center justify-center active:bg-emerald-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,65,0.3)]" data-i18n="mobHealBtnText">CURA</button>
             </div>
 
             <!-- Direita: Grid Vertical (Pulo, Slow, Golpe, Especial) -->
             <div class="control-group-right">
                 <button id="btnJump" class="w-11 h-11 bg-green-950/95 border-2 border-green-400 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,65,0.3)]" data-i18n="mobJump">PULO</button>
-                <button id="btnFocus" class="w-11 h-11 bg-cyan-950/95 border-2 border-cyan-400 text-cyan-200 rounded-full flex items-center justify-center active:bg-cyan-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,255,0.3)]">SLOW</button>
+                <button id="btnFocus" class="w-11 h-11 bg-cyan-950/95 border-2 border-cyan-400 text-cyan-200 rounded-full flex items-center justify-center active:bg-cyan-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,255,0.3)]" data-i18n="mobSlowBtnText">SLOW</button>
                 <button id="btnMelee" class="w-11 h-11 bg-green-950/95 border-2 border-green-400 text-green-300 rounded-full flex items-center justify-center active:bg-green-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(0,255,65,0.3)]" data-i18n="mobMelee">GOLP</button>
                 <button id="btnSpecial" class="w-11 h-11 bg-red-950/95 border-2 border-red-400 text-red-200 rounded-full flex items-center justify-center active:bg-red-400 active:text-black font-bold text-[10px] shadow-[0_0_10px_rgba(255,0,0,0.3)]" data-i18n="mobSpec">ESP</button>
             </div>
@@ -406,12 +494,15 @@
 
     </div>
 
-    <!-- SCRIPT DO JOGO ORIGINAL -->
+    <!-- SCRIPT DO JOGO -->
     <script>
         let currentLang = 'pt';
         const translations = {
             pt: {
                 skipIntro: "AVANÇAR / PULAR",
+                introInstructionText: "▶ TOQUE AQUI OU ENTER PARA AVANÇAR",
+                bulletTimeHud: "BULLET TIME",
+                healReadyText: "CURA [F]",
                 scoreLabel: "PONTOS",
                 highScoreLabel: "RECORDE",
                 stageLabel: "ESTÁGIO",
@@ -420,7 +511,7 @@
                 mainSubtitle: "\"Você toma a pílula azul... a história termina. Você toma a pílula vermelha... você permanece no País das Maravilhas.\"",
                 bluePillBtn: "PÍLULA AZUL (MANUAL)",
                 redPillBtn: "PÍLULA VERMELHA (ENTRAR)",
-                cyberpunkSubtitle: "CYBERPUNK ACTION • DEFTONES OST • HD SPRITES",
+                cyberpunkSubtitle: "CYBERPUNK ACTION • HD SPRITES",
                 selectCharTitle: "SELEÇÃO DE OPERADOR & NÍVEL DE AMEAÇA",
                 diffLabel: "DIFICULDADE:",
                 diffEasyBtn: "FÁCIL",
@@ -434,15 +525,37 @@
                 morpheusSp1: "Especial:", morpheusSp1Desc: "Whirlwind Katana [K]",
                 startConnBtn: "INICIAR CONEXÃO",
                 manualTitle: "MANUAL DO OPERADOR",
-                ctrlMobDesc: "Use os botões na tela do celular",
-                healLimitNote: "Limitado por Onda",
-                ctrlPauseDesc: "Pausar / Configurações",
-                consumablesTitle: "CONSUMÍVEIS:",
-                consumablesDesc: "Pegue a <b>Pílula Vermelha</b> (+HP), <b>Pílula Azul</b> (+Stamina) e o <b>Disquete</b> (+500 Pts)!",
+                pcControlsTitle: "CONTROLES TECLADO (PC):",
+                moveDesc: "Mover", jumpDesc: "Pular", attackDesc: "Atacar Golpe", specialDesc: "Ataque Especial", bulletTimeDesc: "Slow-Motion", healDesc: "Regenerar Cura", pauseDesc: "Pausar / Menu",
+                mobControlsTitle: "GUIAS DOS BOTÕES TÁTEIS (MODO JOGO):",
+                mobMoveBold: "Mover Esquerda / Direita:",
+                mobMoveHelp: "Caminhe pelo mapa e desvie dos tiros dos Agentes.",
+                mobHealBold: "Cura +30% HP:",
+                mobHealHelp: "Restaura vida. Restrito por limites de onda.",
+                mobJumpBold: "Pulo Voador:",
+                mobJumpHelp: "Esquive de balas e alcance inimigos aéreos.",
+                mobSlowBold: "Bullet Time:",
+                mobSlowHelp: "Desacelera o tempo e a simulação para reações rápidas.",
+                mobMeleeBold: "Golpe Corpo a Corpo:",
+                mobMeleeHelp: "Soco, chute voador ou espada segundo operador.",
+                mobSpecBold: "Golpe Especial:",
+                mobSpecHelp: "Pulso telecinético, Crane Kick ou Katana.",
+                rulesHealTitle: "🛡 REGRAS DE REGENERAÇÃO DE CURA POR ONDA:",
+                ruleEasyTitle: "FÁCIL:",
+                ruleEasy: "Cura Ilimitada (Uso sem restrições)",
+                ruleMedTitle: "MÉDIO:",
+                ruleMed: "Até 40 Usos por Onda",
+                ruleHardTitle: "DIFÍCIL:",
+                ruleHard: "Até 25 Usos por Onda",
+                consumablesTitle: "CONSUMÍVEIS EM CAMPO:",
+                consumablesDesc: "Pegue a <b>Pílula Vermelha</b> (+HP), <b>Pílula Azul</b> (+Stamina Bullet-Time) e o <b>Disquete</b> (+500 Bônus Pts)!",
                 backBtn: "VOLTAR",
                 pausedTitle: "SIMULAÇÃO PAUSADA",
                 resumeBtn: "CONTINUAR [P]",
                 manualBtn: "COMO JOGAR (MANUAL)",
+                musicOnState: "MÚSICA: LIGADA",
+                musicOffState: "MÚSICA: DESLIGADA",
+                backToLobbyBtn: "VOLTAR AO LOBBY",
                 quitBtn: "ABANDONAR",
                 gameOverTitle: "SISTEMA REBOOT",
                 gameOverSub: "Sua mente foi desligada da Matrix.",
@@ -456,6 +569,7 @@
                 masterText: "MESTRE",
                 playAgainBtn: "JOGAR NOVAMENTE",
                 mobJump: "PULO", mobMelee: "GOLP", mobSpec: "ESP",
+                mobHealBtnText: "CURA", mobSlowBtnText: "SLOW",
                 introLines: [
                     "ESTABELECENDO CONEXÃO COM A CONSCIÊNCIA...",
                     "RASTREAMENTO DE SINAL: UNIVERSE-SIMULATION-0029",
@@ -467,7 +581,7 @@
                     "SÃO CONSTRUÇÕES DE UMA PRISÃO PARA A SUA MENTE.",
                     "VOCÊ JÁ TEVE UM SONHO TÃO REAL QUE PARECIA VERDADE?",
                     "E SE VOCÊ NÃO CONSEGUISSE ACORDAR DESSE SONHO?",
-                    "OS AGENTES Smith REPRESENTAM O CONTROLE DO SISTEMA.",
+                    "OS AGENTES SMITH REPRESENTAM O CONTROLE DO SISTEMA.",
                     "A ESCOLHA NUNCA FOI SUA... MAS A LIBERTAÇÃO SIM.",
                     "DESPERTE DA SIMULAÇÃO...",
                     "--------------------------------------------------"
@@ -475,6 +589,9 @@
             },
             en: {
                 skipIntro: "SKIP / ADVANCE",
+                introInstructionText: "▶ TAP HERE OR PRESS ENTER TO ADVANCE",
+                bulletTimeHud: "BULLET TIME",
+                healReadyText: "HEAL [F]",
                 scoreLabel: "SCORE",
                 highScoreLabel: "HIGH SCORE",
                 stageLabel: "STAGE",
@@ -483,7 +600,7 @@
                 mainSubtitle: "\"You take the blue pill... the story ends. You take the red pill... you stay in Wonderland.\"",
                 bluePillBtn: "BLUE PILL (MANUAL)",
                 redPillBtn: "RED PILL (ENTER)",
-                cyberpunkSubtitle: "CYBERPUNK ACTION • DEFTONES OST • HD SPRITES",
+                cyberpunkSubtitle: "CYBERPUNK ACTION • HD SPRITES",
                 selectCharTitle: "OPERATOR SELECTION & THREAT LEVEL",
                 diffLabel: "DIFFICULTY:",
                 diffEasyBtn: "EASY",
@@ -497,15 +614,37 @@
                 morpheusSp1: "Special:", morpheusSp1Desc: "Whirlwind Katana [K]",
                 startConnBtn: "INITIATE CONNECTION",
                 manualTitle: "OPERATOR MANUAL",
-                ctrlMobDesc: "Use touchscreen buttons on mobile",
-                healLimitNote: "Wave Limited",
-                ctrlPauseDesc: "Pause / Settings",
-                consumablesTitle: "CONSUMABLES:",
-                consumablesDesc: "Grab <b>Red Pill</b> (+HP), <b>Blue Pill</b> (+Stamina) & <b>Disk</b> (+500 Pts)!",
+                pcControlsTitle: "KEYBOARD CONTROLS (PC):",
+                moveDesc: "Move", jumpDesc: "Jump", attackDesc: "Attack Strike", specialDesc: "Special Attack", bulletTimeDesc: "Slow-Motion", healDesc: "Regenerate Heal", pauseDesc: "Pause / Menu",
+                mobControlsTitle: "TOUCH BUTTONS GUIDE (GAME MODE):",
+                mobMoveBold: "Move Left / Right:",
+                mobMoveHelp: "Walk around map & dodge Agent bullets.",
+                mobHealBold: "Heal +30% HP:",
+                mobHealHelp: "Restores health. Wave limit applies.",
+                mobJumpBold: "Flying Jump:",
+                mobJumpHelp: "Evade bullets and attack air enemies.",
+                mobSlowBold: "Bullet Time:",
+                mobSlowHelp: "Slow down time & simulation for fast reactions.",
+                mobMeleeBold: "Melee Strike:",
+                mobMeleeHelp: "Punch, kick, or katana attack.",
+                mobSpecBold: "Special Strike:",
+                mobSpecHelp: "Telekinetic pulse, Crane Kick or Katana.",
+                rulesHealTitle: "🛡 HEAL REGENERATION WAVE RULES:",
+                ruleEasyTitle: "EASY:",
+                ruleEasy: "Unlimited Heal (No restrictions)",
+                ruleMedTitle: "MEDIUM:",
+                ruleMed: "Up to 40 Uses per Wave",
+                ruleHardTitle: "HARD:",
+                ruleHard: "Up to 25 Uses per Wave",
+                consumablesTitle: "FIELD CONSUMABLES:",
+                consumablesDesc: "Grab <b>Red Pill</b> (+HP), <b>Blue Pill</b> (+Stamina Bullet-Time) & <b>Disk</b> (+500 Bonus Pts)!",
                 backBtn: "BACK",
                 pausedTitle: "SIMULATION PAUSED",
                 resumeBtn: "RESUME [P]",
                 manualBtn: "HOW TO PLAY (MANUAL)",
+                musicOnState: "MUSIC: ON",
+                musicOffState: "MUSIC: OFF",
+                backToLobbyBtn: "RETURN TO LOBBY",
                 quitBtn: "QUIT",
                 gameOverTitle: "SYSTEM REBOOT",
                 gameOverSub: "Your mind was disconnected from the Matrix.",
@@ -519,6 +658,7 @@
                 masterText: "MASTER",
                 playAgainBtn: "PLAY AGAIN",
                 mobJump: "JUMP", mobMelee: "MEL", mobSpec: "SPC",
+                mobHealBtnText: "HEAL", mobSlowBtnText: "SLOW",
                 introLines: [
                     "ESTABLISHING CONNECTION WITH CONSCIOUSNESS...",
                     "SIGNAL TRACKING: UNIVERSE-SIMULATION-0029",
@@ -530,7 +670,7 @@
                     "ARE CONSTRUCTIONS OF A PRISON FOR YOUR MIND.",
                     "HAVE YOU EVER HAD A DREAM YOU WERE SO SURE WAS REAL?",
                     "WHAT IF YOU COULDN'T WAKE UP FROM THAT DREAM?",
-                    "THE AGENTS Represent SYSTEM CONTROL.",
+                    "THE AGENTS SMITH REPRESENT SYSTEM CONTROL.",
                     "THE CHOICE WAS NEVER YOURS... BUT LIBERATION IS.",
                     "WAKE UP FROM THE SIMULATION...",
                     "--------------------------------------------------"
@@ -546,6 +686,12 @@
             });
             document.getElementById('mainSubtitle').innerText = t.mainSubtitle;
             document.getElementById('btnToggleLang').innerText = currentLang === 'pt' ? '🌐 PT' : '🌐 EN';
+            
+            // Sincronizar texto de música no menu de pausa ao trocar o idioma
+            const pauseMusicBtn = document.getElementById('btnPauseMusicToggle');
+            if (pauseMusicBtn) {
+                pauseMusicBtn.innerText = audio.musicEnabled ? t.musicOnState : t.musicOffState;
+            }
         }
 
         window.toggleLanguage = function() {
@@ -587,7 +733,7 @@
                 const stepDuration = (60 / this.tempo) / 4;
                 this.timerId = setInterval(() => {
                     if (!this.musicEnabled || !this.isMusicPlaying) return;
-                    this.playDeftonesRiffStep(this.noteStep);
+                    this.playRiffStep(this.noteStep);
                     this.noteStep = (this.noteStep + 1) % 16;
                 }, stepDuration * 1000);
             }
@@ -597,11 +743,11 @@
                 if (this.timerId) clearInterval(this.timerId);
             }
 
-            playDeftonesRiffStep(step) {
+            playRiffStep(step) {
                 if (!this.ctx) return;
                 const now = this.ctx.currentTime;
-                const deftonesNotes = [65.41, 65.41, 77.78, 73.42, 69.30, 65.41, 77.78, 73.42, 65.41, 65.41, 77.78, 73.42, 69.30, 65.41, 61.74, 58.27];
-                const freq = deftonesNotes[step];
+                const riffNotes = [65.41, 65.41, 77.78, 73.42, 69.30, 65.41, 77.78, 73.42, 65.41, 65.41, 77.78, 73.42, 69.30, 65.41, 61.74, 58.27];
+                const freq = riffNotes[step];
 
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -853,10 +999,11 @@
             { name: 'MATRIX CONSTRUCT GRID', bgType: 'construct' }
         ];
 
+        /* CONFIGURAÇÕES DE DIFICULDADE ATUALIZADAS CONFORME ESPECIFICAÇÃO */
         const DIFFICULTY_SETTINGS = {
             easy: { name: 'FÁCIL', enemyDmgMult: 0.3, dropRate: 0.6, enemySpeedMult: 0.65, scoreMult: 1.0, maxWaves: 5, maxHealPerWave: Infinity },
-            medium: { name: 'MÉDIO', enemyDmgMult: 1.0, dropRate: 0.25, enemySpeedMult: 1.0, scoreMult: 1.0, maxWaves: 5, maxHealPerWave: 20 },
-            hard: { name: 'DIFÍCIL', enemyDmgMult: 1.4, dropRate: 0.15, enemySpeedMult: 1.2, scoreMult: 2.0, maxWaves: 3, maxHealPerWave: 6 }
+            medium: { name: 'MÉDIO', enemyDmgMult: 1.0, dropRate: 0.25, enemySpeedMult: 1.0, scoreMult: 1.0, maxWaves: 5, maxHealPerWave: 40 },
+            hard: { name: 'DIFÍCIL', enemyDmgMult: 1.4, dropRate: 0.15, enemySpeedMult: 1.2, scoreMult: 2.0, maxWaves: 3, maxHealPerWave: 25 }
         };
 
         const CHARACTERS = {
@@ -1145,6 +1292,7 @@
             }
         }
 
+        /* DESIGN MELHORADO DOS AGENTES SMITH DO SISTEMA */
         class Enemy {
             constructor(type, x) {
                 this.type = type; this.x = x;
@@ -1157,7 +1305,7 @@
                 this.maxHp = this.hp;
                 this.speed = (type === 'sentinel' ? 1.5 : 1.1) * diff.enemySpeedMult;
                 this.facing = 1; this.shootCooldown = Math.floor(Math.random() * 80) + 40;
-                this.isDead = false; this.tentacleAnim = 0;
+                this.isDead = false; this.animTimer = Math.random() * 100;
             }
 
             update() {
@@ -1166,6 +1314,7 @@
                 const dx = player.x - this.x; const dy = player.y - this.y;
                 const dist = Math.hypot(dx, dy);
                 this.facing = dx > 0 ? 1 : -1;
+                this.animTimer += 0.2 * timeScale;
 
                 if (this.type === 'agent' || this.type === 'smithBoss') {
                     if (Math.abs(dx) > 28) {
@@ -1212,11 +1361,60 @@
                 ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
                 if (this.facing === -1) ctx.scale(-1, 1);
                 const px = -this.width / 2; const py = -this.height / 2;
+
                 if (this.type === 'agent' || this.type === 'smithBoss') {
-                    ctx.fillStyle = '#1e2226'; ctx.fillRect(px + 2, py + 9, 12, 14);
-                    ctx.fillStyle = '#f0c090'; ctx.fillRect(px + 4, py + 1, 8, 8);
+                    const isBoss = this.type === 'smithBoss';
+                    const walkCycle = Math.sin(this.animTimer * 2) * (Math.abs(this.vx) > 0.1 ? 3 : 0);
+
+                    // Terno / Paletó Escuro com Sombreamento Visual
+                    ctx.fillStyle = isBoss ? '#0e1114' : '#1a1d20';
+                    ctx.fillRect(px + 2, py + 9, 12, 14); // Corpo principal
+                    
+                    // Ombreiras e lapela estilizada
+                    ctx.fillStyle = '#080a0c';
+                    ctx.fillRect(px + 1, py + 9, 3, 6);
+                    ctx.fillRect(px + 12, py + 9, 3, 6);
+
+                    // Camisa Branca Interna e Gravata Preta Smith
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(px + 6, py + 9, 4, 6);
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(px + 7, py + 9, 2, 8); // Gravata em destaque
+
+                    // Rosto e Tom de Pele do Agente
+                    ctx.fillStyle = '#f0c090';
+                    ctx.fillRect(px + 4, py + 1, 8, 8);
+
+                    // Cabelo Penteado Agente Smith
+                    ctx.fillStyle = '#3a2512';
+                    ctx.fillRect(px + 3, py, 10, 3);
+                    ctx.fillRect(px + 3, py + 2, 2, 4);
+
+                    // Óculos Escuros Característicos com Brilho Neon/Verde
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(px + 5, py + 4, 7, 3); // Lentes
+                    ctx.fillStyle = isBoss ? '#00ff41' : '#ffffff'; // Reflexo nos óculos
+                    ctx.fillRect(px + 6, py + 4, 1, 1);
+
+                    // Perna / Calça com Animação de Passos
+                    ctx.fillStyle = '#101214';
+                    ctx.fillRect(px + 3, py + 23, 4, 9 + walkCycle);
+                    ctx.fillRect(px + 9, py + 23, 4, 9 - walkCycle);
+
+                    // Auréola Boss para o Agente Principal
+                    if (isBoss) {
+                        ctx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(px - 1, py - 1, this.width + 2, this.height + 2);
+                    }
                 } else if (this.type === 'sentinel') {
-                    ctx.fillStyle = '#2b3036'; ctx.fillRect(px + 4, py + 2, 14, 10);
+                    // Sentinela Polida
+                    ctx.fillStyle = '#2b3036'; 
+                    ctx.fillRect(px + 4, py + 2, 14, 10);
+                    ctx.fillStyle = '#ff1111'; // Olhos vermelhos
+                    ctx.fillRect(px + 6, py + 6, 2, 2);
+                    ctx.fillRect(px + 10, py + 6, 2, 2);
+                    ctx.fillRect(px + 14, py + 6, 2, 2);
                 }
                 ctx.restore();
             }
@@ -1290,6 +1488,18 @@
 
         function getHighScore() { return parseInt(localStorage.getItem(`matrix_highscore_${difficulty}`) || '0'); }
         function saveHighScore(newScore) { if (newScore > getHighScore()) localStorage.setItem(`matrix_highscore_${difficulty}`, newScore); }
+
+        function returnToLobby() {
+            audio.stopMusic();
+            gameState = 'CHAR_SELECT';
+            document.getElementById('gameOverMenu').classList.add('hidden');
+            document.getElementById('victoryMenu').classList.add('hidden');
+            document.getElementById('pauseMenu').classList.add('hidden');
+            document.getElementById('hud').classList.add('hidden');
+            document.getElementById('btnPause').classList.add('hidden');
+            document.getElementById('charSelectMenu').classList.remove('hidden');
+            renderAllPortraits();
+        }
 
         function initGame() {
             score = 0; wave = 1; maxWaves = DIFFICULTY_SETTINGS[difficulty].maxWaves;
@@ -1470,18 +1680,18 @@
             audio.init(); audio.musicEnabled = !audio.musicEnabled;
             const btn = document.getElementById('btnToggleMusic');
             const pauseBtn = document.getElementById('btnPauseMusicToggle');
+            const t = translations[currentLang];
             if (audio.musicEnabled) {
-                btn.innerText = '🔊 MÚSICA'; pauseBtn.innerText = currentLang === 'pt' ? 'MÚSICA: LIGADA' : 'MUSIC: ON';
+                btn.innerText = '🔊 MÚSICA'; pauseBtn.innerText = t.musicOnState;
                 if (gameState === 'PLAYING') audio.startMusic();
             } else {
-                btn.innerText = '🔇 MÚSICA'; pauseBtn.innerText = currentLang === 'pt' ? 'MÚSICA: DESLIGADA' : 'MUSIC: OFF';
+                btn.innerText = '🔇 MÚSICA'; pauseBtn.innerText = t.musicOffState;
                 audio.stopMusic();
             }
         });
 
         document.getElementById('btnPauseMusicToggle').addEventListener('click', () => { document.getElementById('btnToggleMusic').click(); });
         
-        // CORREÇÃO DO MANUAL ABRINDO CORRETAMENTE
         document.getElementById('btnPauseHowToPlay').addEventListener('click', () => { 
             audio.playClick(); 
             document.getElementById('pauseMenu').classList.add('hidden');
@@ -1497,6 +1707,12 @@
 
         document.getElementById('btnPause').addEventListener('click', togglePause);
         document.getElementById('btnResume').addEventListener('click', togglePause);
+
+        // BOTÕES "VOLTAR AO LOBBY" ADICIONADOS CONFORME SOLICITAÇÃO
+        document.getElementById('btnGameOverLobby').addEventListener('click', () => { audio.playClick(); returnToLobby(); });
+        document.getElementById('btnVictoryLobby').addEventListener('click', () => { audio.playClick(); returnToLobby(); });
+        document.getElementById('btnPauseQuitToLobby').addEventListener('click', () => { audio.playClick(); returnToLobby(); });
+
         document.getElementById('btnQuit').addEventListener('click', () => {
             audio.stopMusic(); gameState = 'MENU';
             document.getElementById('pauseMenu').classList.add('hidden');
@@ -1512,7 +1728,6 @@
             renderAllPortraits(); gameState = 'CHAR_SELECT';
         });
 
-        // CORREÇÃO DO BOTÃO DA PÍLULA AZUL NO MENU PRINCIPAL
         document.getElementById('btnBluePill').addEventListener('click', () => { 
             audio.init(); 
             audio.playClick(); 
